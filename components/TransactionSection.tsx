@@ -27,32 +27,61 @@ export default function TransactionSection() {
         </Reveal>
         <Reveal delay={0.1}>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted">
-            Wallets fließen durch Smart-Contract-Pipelines, werden geroutet und
-            an jedem Knoten in Anteile zerlegt — Treasury, Validatoren, Pool und
-            Burn. Echtzeit-Wertströme, sichtbar gemacht.
+            Jede Transaktion durchläuft die volle Pipeline — Mempool,
+            Validierung, Consensus, Execution und Settlement. Security-Gates
+            prüfen jeden Wert, abgelehnte Transaktionen fallen heraus, gültige
+            werden bestätigt und ihre Fees in 3D verteilt.
           </p>
         </Reveal>
       </div>
 
-      {/* animated network */}
-      <div className="relative mt-10 h-[58vh] w-full md:h-[62vh]">
+      {/* animated 3D network */}
+      <div className="relative mt-10 h-[64vh] w-full md:h-[70vh]">
         <TransactionFlow />
         {/* soft edge fades to blend the canvas into the page */}
         <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-ink to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-ink to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-ink to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink to-transparent" />
       </div>
 
-      {/* legend */}
-      <div className="mx-auto mt-6 flex max-w-7xl flex-wrap items-center gap-x-8 gap-y-3 px-6 text-xs uppercase tracking-widest text-muted md:px-10">
-        <span className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-bone" /> Transaktion
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-gold" /> Fee-Anteil
-        </span>
-        <span className="flex items-center gap-2">
-          <span className="h-2 w-2 rotate-45 bg-bone" /> Contract / Router
-        </span>
+      {/* security phase rail */}
+      <div className="mx-auto mt-8 max-w-7xl px-6 md:px-10">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] uppercase tracking-[0.25em] text-muted">
+          {[
+            "Mempool",
+            "Validierung",
+            "Consensus",
+            "Execution",
+            "Settlement",
+          ].map((phase, i) => (
+            <span key={phase} className="flex items-center gap-3">
+              {i > 0 && <span className="text-gold/40">→</span>}
+              <span className="flex items-center gap-2">
+                <span className="font-mono text-gold">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                {phase}
+              </span>
+            </span>
+          ))}
+        </div>
+
+        {/* state legend */}
+        <div className="mt-6 flex flex-wrap items-center gap-x-7 gap-y-3 text-xs uppercase tracking-widest text-muted">
+          <span className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[#6a6a72]" /> Ausstehend
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-gold" /> Validiert
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-bone" /> Bestätigt
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-[#c0392b]" /> Abgelehnt
+          </span>
+        </div>
       </div>
     </section>
   );
