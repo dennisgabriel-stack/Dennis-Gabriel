@@ -15,7 +15,7 @@ export default function Hero() {
   return (
     <section
       id="top"
-      className="relative flex h-[100svh] w-full flex-col justify-center overflow-hidden"
+      className="relative flex h-[100svh] w-full flex-col justify-start overflow-hidden pt-28 md:justify-center md:pt-0"
     >
       {/* 3D particle field */}
       <div className="absolute inset-0 z-0">
