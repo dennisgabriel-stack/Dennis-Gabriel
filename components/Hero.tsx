@@ -82,7 +82,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.95, duration: 1, ease }}
-          className="mt-52 max-w-xl text-balance text-lg text-muted md:mt-12 md:text-xl"
+          className="mt-64 max-w-xl text-balance text-lg text-muted md:mt-12 md:text-xl"
         >
           Ich entwerfe und baue komplette digitale Erlebnisse — von der{" "}
           <span className="text-bone">cinematischen Oberfläche</span> bis zur{" "}
