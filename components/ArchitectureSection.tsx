@@ -87,7 +87,7 @@ export default function ArchitectureSection() {
   );
 
   return (
-    <section ref={ref} className="relative h-[340vh] w-full">
+    <section ref={ref} className="relative h-[250vh] w-full">
       <div className="sticky top-0 flex h-[100svh] w-full items-center overflow-hidden">
         {/* rotating cube structure */}
         <div className="absolute inset-0 z-0">

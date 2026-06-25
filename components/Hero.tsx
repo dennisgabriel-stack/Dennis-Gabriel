@@ -15,7 +15,7 @@ export default function Hero() {
   return (
     <section
       id="top"
-      className="relative flex h-[100svh] w-full flex-col justify-start overflow-hidden pt-20 md:justify-center md:pt-0"
+      className="relative flex h-[100svh] w-full flex-col overflow-hidden"
     >
       {/* 3D particle field */}
       <div className="absolute inset-0 z-0">
@@ -45,44 +45,46 @@ export default function Hero() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-48 bg-gradient-to-t from-ink to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-ink to-transparent" />
 
-      <div className="relative z-20 mx-auto w-full max-w-7xl px-6 md:px-10">
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.9, ease }}
-          className="mb-6 text-xs uppercase tracking-[0.4em] text-gold md:mb-10"
-        >
-          Full-Stack · Blockchain · KI
-        </motion.p>
+      <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col px-6 pb-14 pt-24 md:justify-center md:px-10 md:pb-0 md:pt-0">
+        <div>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.9, ease }}
+            className="mb-6 text-xs uppercase tracking-[0.4em] text-gold md:mb-10"
+          >
+            Full-Stack · Blockchain · KI
+          </motion.p>
 
-        <h1 className="font-display text-[15vw] font-bold leading-[0.86] tracking-tight md:text-[10vw] lg:text-[8.5vw]">
-          <span className="reveal-line">
-            <motion.span
-              initial={{ y: "110%" }}
-              animate={{ y: 0 }}
-              transition={{ delay: 0.45, duration: 1, ease }}
-              className="block"
-            >
-              DENNIS
-            </motion.span>
-          </span>
-          <span className="reveal-line">
-            <motion.span
-              initial={{ y: "110%" }}
-              animate={{ y: 0 }}
-              transition={{ delay: 0.6, duration: 1, ease }}
-              className="block text-gold"
-            >
-              GABRIEL
-            </motion.span>
-          </span>
-        </h1>
+          <h1 className="font-display text-[15vw] font-bold leading-[0.86] tracking-tight md:text-[10vw] lg:text-[8.5vw]">
+            <span className="reveal-line">
+              <motion.span
+                initial={{ y: "110%" }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.45, duration: 1, ease }}
+                className="block"
+              >
+                DENNIS
+              </motion.span>
+            </span>
+            <span className="reveal-line">
+              <motion.span
+                initial={{ y: "110%" }}
+                animate={{ y: 0 }}
+                transition={{ delay: 0.6, duration: 1, ease }}
+                className="block text-gold"
+              >
+                GABRIEL
+              </motion.span>
+            </span>
+          </h1>
+        </div>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.95, duration: 1, ease }}
-          className="mt-64 max-w-xl text-balance text-lg text-muted md:mt-12 md:text-xl"
+          className="mt-auto max-w-xl text-balance text-lg text-muted md:mt-12 md:text-xl"
         >
           Ich entwerfe und baue komplette digitale Erlebnisse — von der{" "}
           <span className="text-bone">cinematischen Oberfläche</span> bis zur{" "}
