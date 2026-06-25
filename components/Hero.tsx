@@ -1,0 +1,93 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import { motion } from "framer-motion";
+
+const SceneBackground = dynamic(
+  () => import("@/components/three/SceneBackground"),
+  { ssr: false }
+);
+
+const ease = [0.16, 1, 0.3, 1] as const;
+
+export default function Hero() {
+  return (
+    <section
+      id="top"
+      className="relative flex h-[100svh] w-full flex-col justify-center overflow-hidden"
+    >
+      {/* 3D particle field */}
+      <div className="absolute inset-0 z-0">
+        <SceneBackground />
+      </div>
+
+      {/* Cinematic vignettes */}
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_30%,#0a0a0b_85%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-ink to-transparent" />
+
+      <div className="relative z-20 mx-auto w-full max-w-7xl px-6 md:px-10">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.9, ease }}
+          className="mb-6 text-xs uppercase tracking-[0.4em] text-gold"
+        >
+          Full-Stack · Blockchain · KI
+        </motion.p>
+
+        <h1 className="font-display text-[15vw] font-bold leading-[0.86] tracking-tight md:text-[10vw] lg:text-[8.5vw]">
+          <span className="reveal-line">
+            <motion.span
+              initial={{ y: "110%" }}
+              animate={{ y: 0 }}
+              transition={{ delay: 0.45, duration: 1, ease }}
+              className="block"
+            >
+              DENNIS
+            </motion.span>
+          </span>
+          <span className="reveal-line">
+            <motion.span
+              initial={{ y: "110%" }}
+              animate={{ y: 0 }}
+              transition={{ delay: 0.6, duration: 1, ease }}
+              className="block text-gold"
+            >
+              GABRIEL
+            </motion.span>
+          </span>
+        </h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.95, duration: 1, ease }}
+          className="mt-8 max-w-xl text-balance text-lg text-muted md:text-xl"
+        >
+          Ich entwerfe und baue komplette digitale Erlebnisse — von der{" "}
+          <span className="text-bone">cinematischen Oberfläche</span> bis zur{" "}
+          <span className="text-bone">On-Chain-Architektur</span>.
+        </motion.p>
+      </div>
+
+      {/* Scroll cue */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.6, duration: 1 }}
+        className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 flex flex-col items-center gap-3"
+      >
+        <span className="text-[10px] uppercase tracking-[0.3em] text-muted">
+          Scroll
+        </span>
+        <span className="relative h-12 w-px overflow-hidden bg-bone/20">
+          <motion.span
+            animate={{ y: ["-100%", "100%"] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-x-0 top-0 h-1/2 bg-gold"
+          />
+        </span>
+      </motion.div>
+    </section>
+  );
+}
