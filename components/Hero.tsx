@@ -15,7 +15,7 @@ export default function Hero() {
   return (
     <section
       id="top"
-      className="relative flex h-[100svh] w-full flex-col justify-start overflow-hidden pt-28 md:justify-center md:pt-0"
+      className="relative flex h-[100svh] w-full flex-col justify-start overflow-hidden pt-20 md:justify-center md:pt-0"
     >
       {/* 3D particle field */}
       <div className="absolute inset-0 z-0">
@@ -35,7 +35,7 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          className="scale-110 object-cover object-[22%_52%] opacity-80 md:object-[45%_48%]"
+          className="scale-110 object-cover object-[12%_52%] opacity-80 md:object-[40%_48%]"
         />
       </motion.div>
 
@@ -50,7 +50,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.9, ease }}
-          className="mb-12 text-xs uppercase tracking-[0.4em] text-gold md:mb-10"
+          className="mb-20 text-xs uppercase tracking-[0.4em] text-gold md:mb-10"
         >
           Full-Stack · Blockchain · KI
         </motion.p>
@@ -82,7 +82,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.95, duration: 1, ease }}
-          className="mt-20 max-w-xl text-balance text-lg text-muted md:mt-12 md:text-xl"
+          className="mt-28 max-w-xl text-balance text-lg text-muted md:mt-12 md:text-xl"
         >
           Ich entwerfe und baue komplette digitale Erlebnisse — von der{" "}
           <span className="text-bone">cinematischen Oberfläche</span> bis zur{" "}
