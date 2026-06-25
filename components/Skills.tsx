@@ -19,8 +19,8 @@ const pillars = [
   {
     no: "03",
     title: "Full-Stack Engineering",
-    desc: "Komplette Anwendungen über alle Schichten: Frontend, Echtzeit-Backend, Datenbanken und Blockchain.",
-    tags: ["Frontend", "Backend", "Realtime", "Blockchain"],
+    desc: "Komplette Anwendungen über alle Schichten: Frontend, Echtzeit-Backend, Datenbanken und Cloud-Infrastruktur — branchenübergreifend.",
+    tags: ["Frontend", "Backend", "Realtime", "Cloud"],
   },
 ];
 

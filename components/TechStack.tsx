@@ -17,29 +17,29 @@ const layers: Layer[] = [
     tag: "L1",
     name: "Presentation Layer",
     color: "#e6c88a",
-    tech: ["Next.js 15", "React 19", "PixiJS 8", "Tailwind CSS", "Framer Motion", "i18n · 8 langs"],
-    purpose: "User Interface · Game Rendering · Responsive Design · Animations",
+    tech: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion", "i18n"],
+    purpose: "User Interfaces · Responsive Design · Animationen · Barrierefreiheit",
   },
   {
     tag: "L2",
     name: "Application Layer",
     color: "#c9a86a",
-    tech: ["Node.js / Express", "WebSocket", "PM2 Cluster", "Rate Limiting", "Auth / JWT"],
-    purpose: "Game Logic · Session Management · Real-time Communication · API Gateway",
+    tech: ["Node.js / Express", "REST & GraphQL", "WebSocket", "Auth / JWT", "Rate Limiting"],
+    purpose: "Business-Logik · Session-Management · Echtzeit-Kommunikation · API-Gateway",
   },
   {
     tag: "L3",
     name: "Data Layer",
     color: "#9c8552",
-    tech: ["PostgreSQL", "Redis Cache", "Event System", "Migrations", "Connection Pooling"],
-    purpose: "Player Data · Game History · Leaderboards · Achievements · Analytics",
+    tech: ["PostgreSQL", "Redis Cache", "Event-System", "Migrations", "Connection Pooling"],
+    purpose: "Persistenz · Analytics · Suche · Reporting · Caching",
   },
   {
     tag: "L4",
-    name: "Blockchain Layer",
+    name: "Infrastructure & Integration",
     color: "#7a6740",
-    tech: ["Solana", "Anchor Framework", "Provably Fair RNG", "SPL Token", "On-chain Settlement"],
-    purpose: "Trustless Settlement · Verifiable Fairness · Token Economy",
+    tech: ["Docker", "CI/CD", "Cloud (AWS)", "Web3 / Blockchain", "Monitoring"],
+    purpose: "Deployment · Skalierung · Drittsystem-Integration · Verlässliche Abwicklung",
   },
 ];
 
@@ -69,8 +69,8 @@ export default function TechStack() {
           </Reveal>
           <Reveal delay={0.1}>
             <p className="mt-6 text-lg text-muted">
-              Vom ersten Pixel bis zur On-Chain-Abwicklung — durchdacht,
-              skalierbar und in Echtzeit.
+              Vom ersten Pixel bis zur skalierbaren Infrastruktur — durchdacht,
+              robust und in Echtzeit, über Branchen und Anwendungsfälle hinweg.
             </p>
           </Reveal>
         </div>
