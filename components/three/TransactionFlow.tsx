@@ -279,6 +279,91 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     settleFrame.position.z = STAGES.settlement;
     group.add(settleFrame);
 
+    // ===== per-stage symbols =====
+
+    // 1) Ingest — intake funnel (wide mouth faces incoming data)
+    const funnel = new THREE.LineSegments(
+      new THREE.WireframeGeometry(new THREE.ConeGeometry(3.4, 3.6, 6, 1, true)),
+      new THREE.LineBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.28 })
+    );
+    funnel.position.z = STAGES.ingest;
+    funnel.rotation.x = -Math.PI / 2;
+    group.add(funnel);
+    spinners.push({ mesh: funnel, ax: "y", sp: 0.25 });
+
+    // 2) Sequencing — ascending sorted bars
+    const seqBars: THREE.Mesh[] = [];
+    for (let i = 0; i < 7; i++) {
+      const h = 0.7 + i * 0.45;
+      const barGeo = new THREE.BoxGeometry(0.34, h, 0.34);
+      const bar = new THREE.Mesh(
+        barGeo,
+        new THREE.MeshBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.14, depthWrite: false })
+      );
+      const x = (i - 3) * 0.62;
+      bar.position.set(x, h / 2 - 1.4, STAGES.order);
+      bar.userData.baseY = h / 2 - 1.4;
+      bar.userData.idx = i;
+      group.add(bar);
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(barGeo),
+        new THREE.LineBasicMaterial({ color: 0xe6c88a, transparent: true, opacity: 0.55 })
+      );
+      bar.add(edges);
+      seqBars.push(bar);
+    }
+
+    // 4) Orchestration — interlocking control rings around the core
+    const orchRings = [
+      { rot: [0, 0, 0], sp: 0.6, ax: "x" as const },
+      { rot: [Math.PI / 2, 0, 0], sp: -0.5, ax: "y" as const },
+      { rot: [0, Math.PI / 2, Math.PI / 4], sp: 0.4, ax: "z" as const },
+    ];
+    orchRings.forEach((o) => {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(1.7, 0.03, 10, 64),
+        new THREE.MeshBasicMaterial({ color: 0xf5f4f0, transparent: true, opacity: 0.4 })
+      );
+      ring.position.z = STAGES.orchestrator;
+      ring.rotation.set(o.rot[0], o.rot[1], o.rot[2]);
+      group.add(ring);
+      spinners.push({ mesh: ring, ax: o.ax, sp: o.sp });
+    });
+
+    // 5) Distribution — fan-out routing arrows
+    const upY = new THREE.Vector3(0, 1, 0);
+    dests.forEach((d) => {
+      const dir = new THREE.Vector3(d.x, d.y, 0).normalize();
+      const cone = new THREE.Mesh(
+        new THREE.ConeGeometry(0.18, 0.5, 10),
+        new THREE.MeshBasicMaterial({ color: 0xc9a86a })
+      );
+      cone.position.set(d.x * 0.62, d.y * 0.62, STAGES.distribution);
+      cone.quaternion.setFromUnitVectors(upY, dir);
+      group.add(cone);
+      pulses.push({ mesh: cone, phase: d.x + d.y });
+    });
+
+    // 6) Settlement — confirmation seal (✓ inside a ring)
+    const seal = new THREE.Group();
+    seal.position.z = STAGES.settlement;
+    const sealRing = new THREE.Mesh(
+      new THREE.TorusGeometry(1.4, 0.05, 12, 64),
+      new THREE.MeshBasicMaterial({ color: 0xf5f4f0, transparent: true, opacity: 0.55 })
+    );
+    seal.add(sealRing);
+    const checkMat = new THREE.MeshBasicMaterial({ color: 0xe6c88a });
+    const c1 = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.16, 0.16), checkMat);
+    c1.position.set(-0.45, -0.18, 0);
+    c1.rotation.z = -Math.PI / 4;
+    seal.add(c1);
+    const c2 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.16, 0.16), checkMat);
+    c2.position.set(0.28, 0.1, 0);
+    c2.rotation.z = Math.PI / 3.2;
+    seal.add(c2);
+    group.add(seal);
+    pulses.push({ mesh: seal as unknown as THREE.Mesh, phase: 1.5 });
+
     // ---- data particles ----
     const COUNT = 220;
     const packets: P[] = [];
@@ -314,19 +399,25 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     group.add(inst);
 
-    return { group, spinners, pulses, inst, packets, lock, lockMats, flashState };
+    return { group, spinners, pulses, inst, packets, lock, lockMats, flashState, seqBars };
   }, []);
 
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
     const p = progressRef.current ?? 0;
-    const { spinners, pulses, inst, packets, lock, lockMats, flashState } = built;
+    const { spinners, pulses, inst, packets, lock, lockMats, flashState, seqBars } =
+      built;
 
     spinners.forEach((s) => {
       s.mesh.rotation[s.ax] += delta * s.sp;
     });
     pulses.forEach(({ mesh, phase }) => {
       mesh.scale.setScalar(1 + Math.sin(t * 2.4 + phase) * 0.18);
+    });
+    // sequencing bars bob in order (sorting motion)
+    seqBars.forEach((b) => {
+      b.position.y =
+        (b.userData.baseY as number) + Math.sin(t * 3 + b.userData.idx * 0.5) * 0.12;
     });
 
     // particle orchestration: chaos → ordered lattice → distribution → settled
