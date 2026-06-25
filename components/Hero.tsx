@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 const SceneBackground = dynamic(
@@ -21,9 +22,28 @@ export default function Hero() {
         <SceneBackground />
       </div>
 
-      {/* Cinematic vignettes */}
-      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_30%,#0a0a0b_85%)]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-ink to-transparent" />
+      {/* Profile portrait — sits behind the text */}
+      <motion.div
+        initial={{ opacity: 0, scale: 1.08 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 2, ease }}
+        className="pointer-events-none absolute inset-0 z-[5]"
+      >
+        <Image
+          src="/images/portrait.jpeg"
+          alt="Dennis Gabriel"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[65%_15%] opacity-60 mix-blend-luminosity md:object-[75%_20%]"
+        />
+      </motion.div>
+
+      {/* Cinematic overlays to keep the text readable */}
+      <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-ink via-ink/70 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_25%,#0a0a0b_88%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-48 bg-gradient-to-t from-ink to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-ink to-transparent" />
 
       <div className="relative z-20 mx-auto w-full max-w-7xl px-6 md:px-10">
         <motion.p
@@ -69,25 +89,6 @@ export default function Hero() {
           <span className="text-bone">On-Chain-Architektur</span>.
         </motion.p>
       </div>
-
-      {/* Scroll cue */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.6, duration: 1 }}
-        className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 flex flex-col items-center gap-3"
-      >
-        <span className="text-[10px] uppercase tracking-[0.3em] text-muted">
-          Scroll
-        </span>
-        <span className="relative h-12 w-px overflow-hidden bg-bone/20">
-          <motion.span
-            animate={{ y: ["-100%", "100%"] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-x-0 top-0 h-1/2 bg-gold"
-          />
-        </span>
-      </motion.div>
     </section>
   );
 }
