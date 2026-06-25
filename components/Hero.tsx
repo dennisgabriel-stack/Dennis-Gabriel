@@ -35,7 +35,7 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-[70%_center] opacity-60 mix-blend-luminosity md:object-[75%_center]"
+          className="object-cover object-[65%_15%] opacity-60 mix-blend-luminosity md:object-[75%_20%]"
         />
       </motion.div>
 
@@ -89,25 +89,6 @@ export default function Hero() {
           <span className="text-bone">On-Chain-Architektur</span>.
         </motion.p>
       </div>
-
-      {/* Scroll cue */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.6, duration: 1 }}
-        className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 flex flex-col items-center gap-3"
-      >
-        <span className="text-[10px] uppercase tracking-[0.3em] text-muted">
-          Scroll
-        </span>
-        <span className="relative h-12 w-px overflow-hidden bg-bone/20">
-          <motion.span
-            animate={{ y: ["-100%", "100%"] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute inset-x-0 top-0 h-1/2 bg-gold"
-          />
-        </span>
-      </motion.div>
     </section>
   );
 }
