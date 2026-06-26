@@ -128,6 +128,9 @@ export default function ArchitectureSection() {
         {/* readability vignette weighted to the left where the text sits */}
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-ink via-ink/55 to-transparent" />
         <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_70%_50%,transparent_35%,#0a0a0b_92%)]" />
+        {/* feather top & bottom so the 3D dissolves into the page, no hard cut */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-ink to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-48 bg-gradient-to-t from-ink to-transparent" />
 
         {/* section label */}
         <span className="absolute left-6 top-8 z-20 text-[10px] uppercase tracking-[0.4em] text-muted md:left-10">
