@@ -35,7 +35,7 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          className="scale-110 object-cover object-[12%_52%] opacity-80 md:scale-[1.15] md:object-contain md:object-[60%_center] md:opacity-70"
+          className="scale-110 object-cover object-[12%_52%] opacity-80 md:scale-[1.4] md:object-contain md:object-[82%_top] md:opacity-70"
         />
       </motion.div>
 
@@ -45,7 +45,7 @@ export default function Hero() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-48 bg-gradient-to-t from-ink to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-ink to-transparent" />
 
-      <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col px-6 pb-14 pt-24 md:justify-center md:px-10 md:pb-0 md:pt-0">
+      <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col px-6 pb-14 pt-24 md:justify-start md:px-10 md:pb-0 md:pt-[22vh]">
         <div>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
