@@ -127,9 +127,15 @@ body {
 .cube3d > i {
   position: absolute;
   inset: 0;
-  border: 1px solid #c9a86a;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  border: 1.5px solid #c9a86a;
   background: rgba(201, 168, 106, 0.05);
   box-shadow: inset 0 0 14px rgba(201, 168, 106, 0.25);
+}
+.cube3d > i > b {
+  border: 1px solid rgba(201, 168, 106, 0.4);
 }
 .cube3d .cf1 { transform: translateZ(42px); }
 .cube3d .cf2 { transform: rotateY(180deg) translateZ(42px); }
