@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Reveal from "./Reveal";
 
 const TechCubes = dynamic(() => import("./three/TechCubes"), { ssr: false });
@@ -11,7 +12,22 @@ export default function TechCubesSection() {
       id="stack-3d"
       className="relative w-full overflow-hidden py-24 md:py-32"
     >
-      <div className="mx-auto max-w-7xl px-6 md:px-10">
+      {/* portrait behind the text — right half visible, fading off to the left */}
+      <div className="pointer-events-none absolute right-0 top-0 z-0 h-[72%] w-full md:w-[70%]">
+        <Image
+          src="/images/stack-bg.jpeg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-right opacity-60"
+          priority={false}
+        />
+        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-ink/55 to-ink" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-ink to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-ink to-transparent" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
         <Reveal>
           <p className="text-xs uppercase tracking-[0.4em] text-gold">
             Live-Architektur
