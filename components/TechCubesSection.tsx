@@ -87,7 +87,7 @@ export default function TechCubesSection() {
       <div className="relative z-30 mx-auto max-w-7xl px-6 md:px-10">
         {/* thinking-pose portrait (cutout) behind the heading, like the sketch */}
         <div className="relative">
-          <div className="pointer-events-none absolute left-0 right-0 -top-12 z-0 h-[280px] overflow-hidden md:-top-16 md:h-[400px]">
+          <div className="pointer-events-none absolute left-0 right-0 -top-28 z-0 h-[280px] overflow-hidden md:-top-36 md:h-[400px]">
             <Image
               src="/images/stack-person.png"
               alt=""
