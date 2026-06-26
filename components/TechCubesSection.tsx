@@ -12,19 +12,22 @@ export default function TechCubesSection() {
       id="stack-3d"
       className="relative w-full overflow-hidden py-24 md:py-32"
     >
-      {/* portrait behind the text — right half visible, fading off to the left */}
-      <div className="pointer-events-none absolute right-0 top-0 z-0 h-[72%] w-full md:w-[70%]">
+      {/* portrait behind the text only — confined to the heading area, soft on all sides */}
+      <div className="pointer-events-none absolute left-0 top-0 z-0 h-[52%] w-full md:h-[60%]">
         <Image
           src="/images/stack-bg.jpeg"
           alt=""
           fill
           sizes="100vw"
-          className="object-cover object-right opacity-60"
+          className="object-cover object-[center_30%] opacity-55"
           priority={false}
         />
+        {/* fade left where the text sits */}
         <div className="absolute inset-0 bg-gradient-to-l from-transparent via-ink/55 to-ink" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-ink to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-ink to-transparent" />
+        {/* feather every edge for a seamless blend */}
+        <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-ink to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-ink to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-ink to-transparent" />
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
