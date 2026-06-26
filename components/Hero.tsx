@@ -27,15 +27,25 @@ export default function Hero() {
         initial={{ opacity: 0, scale: 1.08 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 2, ease }}
-        className="pointer-events-none absolute inset-0 z-[5] md:mix-blend-screen"
+        className="pointer-events-none absolute inset-0 z-[5]"
       >
+        {/* mobile: original framing (unchanged) */}
         <Image
           src="/images/portrait.jpeg"
           alt="Dennis Gabriel"
           fill
           priority
           sizes="100vw"
-          className="scale-110 object-cover object-[12%_52%] opacity-80 md:scale-[1.45] md:object-contain md:object-[62%_10%] md:opacity-95"
+          className="scale-110 object-cover object-[12%_52%] opacity-80 md:hidden"
+        />
+        {/* desktop: background-removed cutout over the animated 3D scene */}
+        <Image
+          src="/images/portrait-cut.png"
+          alt="Dennis Gabriel"
+          fill
+          priority
+          sizes="100vw"
+          className="hidden scale-[1.45] object-contain object-[62%_10%] opacity-95 md:block"
         />
       </motion.div>
 
