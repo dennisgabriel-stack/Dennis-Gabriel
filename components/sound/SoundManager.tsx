@@ -166,6 +166,13 @@ export default function SoundManager() {
     voice(880, 0.1, "sine", 0.03, 0.005);
   };
 
+  /* crisp detent tick for the rotary dial */
+  const playTick = () => {
+    if (!gate("tk", 28)) return;
+    voice(1480, 0.05, "square", 0.022);
+    voice(740, 0.06, "sine", 0.02, 0.002);
+  };
+
   /* a low, glorious swell when the cathedral opens */
   const playEnter = () => {
     chime(523.25, 0.09);
@@ -257,6 +264,7 @@ export default function SoundManager() {
     const onTextIn = () => playTextIn();
     const onTextOut = () => playTextOut();
     const onBlock = () => playBlock();
+    const onTick = () => playTick();
     window.addEventListener("pointerover", over);
     window.addEventListener("click", click);
     window.addEventListener("ux-hover", onHover);
@@ -266,6 +274,7 @@ export default function SoundManager() {
     window.addEventListener("ux-textin", onTextIn);
     window.addEventListener("ux-textout", onTextOut);
     window.addEventListener("ux-block", onBlock);
+    window.addEventListener("ux-tick", onTick);
     return () => {
       window.removeEventListener("pointerover", over);
       window.removeEventListener("click", click);
@@ -276,6 +285,7 @@ export default function SoundManager() {
       window.removeEventListener("ux-textin", onTextIn);
       window.removeEventListener("ux-textout", onTextOut);
       window.removeEventListener("ux-block", onBlock);
+      window.removeEventListener("ux-tick", onTick);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled]);
