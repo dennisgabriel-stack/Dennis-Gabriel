@@ -10,6 +10,63 @@ import { FORMATION_LABELS } from "./three/TechCubes";
 
 const TechCubes = dynamic(() => import("./three/TechCubes"), { ssr: false });
 
+// icons symbolising each construct (order matches FORMATION_LABELS)
+const CONSTRUCT_ICONS = [
+  // A-Monogramm — the ARCHANGEL "A"
+  <svg key="a" width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M12 4 L5 20 M12 4 L19 20 M8 14 H16"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>,
+  // Turm — stacked blocks (2×3)
+  <svg key="t" width="22" height="22" viewBox="0 0 24 24" fill="none">
+    {[6, 11, 16].map((y) =>
+      [7, 13].map((x) => (
+        <rect
+          key={`${x}-${y}`}
+          x={x - 3.6}
+          y={y - 2.2}
+          width="7.2"
+          height="4.4"
+          rx="1"
+          stroke="currentColor"
+          strokeWidth="1.6"
+        />
+      ))
+    )}
+  </svg>,
+  // Helix — double helix curve
+  <svg key="h" width="22" height="22" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M12 3 C 19 6, 19 9, 12 11.5 C 5 14, 5 18, 12 21"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+    />
+    <path
+      d="M12 3 C 5 6, 5 9, 12 11.5 C 19 14, 19 18, 12 21"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+    />
+    <path
+      d="M9 6 H15 M9 17 H15"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      opacity="0.7"
+    />
+  </svg>,
+  // DG — the initials
+  <span key="dg" className="font-display text-[15px] font-bold tracking-tight">
+    DG
+  </span>,
+];
+
 export default function TechCubesSection() {
   const [tech, setTech] = useState<Tech | null>(null);
   const buildRef = useRef(-1);
@@ -94,23 +151,25 @@ export default function TechCubesSection() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-ink to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
 
-        {/* construct builder buttons */}
-        <div className="pointer-events-none absolute inset-x-0 top-6 z-30 flex flex-col items-center gap-2 px-4">
+        {/* construct builder — 4 icons symbolising what each one builds */}
+        <div className="pointer-events-none absolute inset-x-0 top-5 z-30 flex flex-col items-center gap-2 px-4">
           <p className="text-[10px] uppercase tracking-[0.35em] text-muted">
             Konstrukt bauen
           </p>
-          <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-2">
-            {FORMATION_LABELS.map((label, i) => (
+          <div className="pointer-events-auto flex items-center justify-center gap-3">
+            {CONSTRUCT_ICONS.map((icon, i) => (
               <button
-                key={label}
+                key={FORMATION_LABELS[i]}
                 onClick={() => build(i)}
-                className={`rounded-full border px-4 py-2 text-xs font-medium uppercase tracking-[0.16em] backdrop-blur-md transition-all duration-300 ${
+                aria-label={FORMATION_LABELS[i]}
+                title={FORMATION_LABELS[i]}
+                className={`flex h-12 w-12 items-center justify-center rounded-xl border backdrop-blur-md transition-all duration-300 ${
                   active === i
-                    ? "border-gold bg-gold text-ink shadow-[0_0_24px_rgba(201,168,106,0.5)]"
+                    ? "border-gold bg-gold text-ink shadow-[0_0_24px_rgba(201,168,106,0.55)]"
                     : "border-bone/20 bg-ink/40 text-bone hover:border-gold/60 hover:text-gold"
                 }`}
               >
-                {label}
+                {icon}
               </button>
             ))}
           </div>
