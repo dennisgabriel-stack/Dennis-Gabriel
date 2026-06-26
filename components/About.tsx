@@ -16,37 +16,6 @@ const AmbientParticles = dynamic(
   { ssr: false }
 );
 
-// spray of gold particles flying off-screen → "dissolve into particles"
-function spawnDissolve(side: "left" | "right") {
-  if (typeof window === "undefined") return;
-  const W = window.innerWidth;
-  const H = window.innerHeight;
-  const ox = side === "left" ? W * 0.26 : W * 0.74;
-  const dir = side === "left" ? -1 : 1;
-  const colors = ["#e6c88a", "#c9a86a", "#f5f4f0"];
-  for (let i = 0; i < 26; i++) {
-    const el = document.createElement("div");
-    const size = 5 + Math.random() * 9;
-    const color = colors[i % colors.length];
-    el.style.cssText = `position:fixed;left:${ox}px;top:${H * (0.3 + Math.random() * 0.45)}px;width:${size}px;height:${size}px;border:1px solid ${color};background:${color}22;border-radius:2px;pointer-events:none;z-index:60;transform:translate(-50%,-50%);will-change:transform,opacity;box-shadow:0 0 8px ${color}66;`;
-    document.body.appendChild(el);
-    const dx = dir * (200 + Math.random() * 520);
-    const dy = (Math.random() - 0.5) * 320;
-    const rot = (Math.random() - 0.5) * 540;
-    const anim = el.animate(
-      [
-        { transform: "translate(-50%,-50%) scale(1) rotate(0deg)", opacity: 1 },
-        {
-          transform: `translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(0.2) rotate(${rot}deg)`,
-          opacity: 0,
-        },
-      ],
-      { duration: 1100 + Math.random() * 500, easing: "cubic-bezier(0.22,1,0.36,1)" }
-    );
-    anim.onfinish = () => el.remove();
-  }
-}
-
 export default function About() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -88,8 +57,6 @@ export default function About() {
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     if (v > 0.62 && !dissolved.current) {
       dissolved.current = true;
-      spawnDissolve("left");
-      spawnDissolve("right");
       if (typeof window !== "undefined")
         window.dispatchEvent(new CustomEvent("ux-woosh"));
     }
@@ -169,7 +136,7 @@ export default function About() {
         {/* text fades in as you keep scrolling, dissolves left on exit */}
         <motion.div
           style={{ opacity: textOpacity, y: textY, x: textX, filter: textFilter }}
-          className="relative z-10 mr-auto max-w-xl px-6 md:px-10 md:pl-[8vw]"
+          className="relative z-10 mr-auto max-w-xl px-6 md:px-10 md:pl-[13vw]"
         >
           <p className="mb-6 text-xs uppercase tracking-[0.4em] text-gold">
             Über mich
