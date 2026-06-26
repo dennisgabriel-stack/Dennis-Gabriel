@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef, type MutableRefObject } from "react";
+import { useEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
 
 const { clamp, lerp } = THREE.MathUtils;
@@ -83,9 +83,48 @@ type P = {
 };
 
 function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
-  const { pointer } = useThree();
+  const { pointer, gl } = useThree();
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const col = useMemo(() => new THREE.Color(), []);
+  const orbit = useRef({
+    yaw: 0,
+    pitch: 0,
+    tyaw: 0,
+    tpitch: 0,
+    drag: false,
+    lx: 0,
+    ly: 0,
+  });
+
+  // mouse-drag orbit (touch left for page scrolling)
+  useEffect(() => {
+    const el = gl.domElement;
+    const o = orbit.current;
+    const down = (e: PointerEvent) => {
+      if (e.pointerType === "touch") return;
+      o.drag = true;
+      o.lx = e.clientX;
+      o.ly = e.clientY;
+    };
+    const move = (e: PointerEvent) => {
+      if (!o.drag) return;
+      o.tyaw += (e.clientX - o.lx) * 0.005;
+      o.tpitch = clamp(o.tpitch + (e.clientY - o.ly) * 0.004, -0.6, 0.6);
+      o.lx = e.clientX;
+      o.ly = e.clientY;
+    };
+    const up = () => {
+      o.drag = false;
+    };
+    el.addEventListener("pointerdown", down);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      el.removeEventListener("pointerdown", down);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [gl]);
 
   const built = useMemo(() => {
     const group = new THREE.Group();
@@ -93,27 +132,39 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
       [];
     const pulses: { mesh: THREE.Mesh; phase: number }[] = [];
 
-    // ---- 3D layer planes (you fly through them) ----
-    const layerZ = [
-      STAGES.ingest,
-      STAGES.order,
+    // ---- ingest funnel: narrowing, rotating rings that catch the data ----
+    for (let i = 0; i < 8; i++) {
+      const fr = 8 - i * 0.95; // wide mouth → narrow throat
+      const fz = STAGES.ingest + 5 - i * 2.1; // from in front of ingest toward order
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(Math.max(0.7, fr), 0.025, 8, 96),
+        new THREE.MeshBasicMaterial({
+          color: 0xc9a86a,
+          transparent: true,
+          opacity: 0.16,
+        })
+      );
+      ring.position.z = fz;
+      group.add(ring);
+      spinners.push({ mesh: ring, ax: "z", sp: 0.1 + i * 0.05 });
+    }
+    // ---- portal rings at the later stages (clean tunnel to fly through) ----
+    [
       STAGES.security,
       STAGES.orchestrator,
       STAGES.distribution,
       STAGES.settlement,
-    ];
-    layerZ.forEach((z, i) => {
-      const geo = new THREE.PlaneGeometry(22, 13, 11, 7);
-      const wire = new THREE.LineSegments(
-        new THREE.WireframeGeometry(geo),
-        new THREE.LineBasicMaterial({
+    ].forEach((z, i) => {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(4.6, 0.02, 8, 80),
+        new THREE.MeshBasicMaterial({
           color: i % 2 ? 0xc9a86a : 0xf5f4f0,
           transparent: true,
-          opacity: 0.05,
+          opacity: 0.08,
         })
       );
-      wire.position.z = z;
-      group.add(wire);
+      ring.position.z = z;
+      group.add(ring);
     });
 
     // ---- ordering lattice (slots data snaps into) ----
@@ -518,6 +569,13 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     lock.position.y = Math.sin(t * 0.8) * 0.15;
     lock.scale.setScalar(1.5 * (1 + Math.sin(t * 2) * 0.03 + f * 0.18));
     flashState.v *= 0.9;
+
+    // mouse-drag orbit: rotate the whole scene to look around
+    const o = orbit.current;
+    o.yaw = lerp(o.yaw, o.tyaw, 0.08);
+    o.pitch = lerp(o.pitch, o.tpitch, 0.08);
+    built.group.rotation.y = o.yaw;
+    built.group.rotation.x = o.pitch;
 
     // scroll-driven camera dolly through the pipeline
     const camZ = lerp(22, -56, p);
