@@ -154,8 +154,29 @@ function helix(i: number) {
   return new THREE.Vector3(Math.cos(ang) * r, (k - 5.5) * 0.8, Math.sin(ang) * r);
 }
 
-export const FORMATION_LABELS = ["A-Monogramm", "Turm", "Helix"];
-const FORMATIONS = [monogramA, tower, helix];
+// 4) the "DG" initials — D (12 cells) + G (12 cells)
+const DG_CELLS: [number, number][] = [
+  // D — cols 0..3
+  [0, 0], [1, 0], [2, 0],
+  [0, 1], [3, 1],
+  [0, 2], [3, 2],
+  [0, 3], [3, 3],
+  [0, 4], [1, 4], [2, 4],
+  // G — cols 5..8
+  [6, 0], [7, 0], [8, 0],
+  [5, 1],
+  [5, 2], [7, 2], [8, 2],
+  [5, 3], [8, 3],
+  [6, 4], [7, 4], [8, 4],
+];
+function initialsDG(i: number) {
+  const [c, r] = DG_CELLS[i];
+  const S = 1.0;
+  return new THREE.Vector3((c - 4) * S, (2 - r) * S, 0);
+}
+
+export const FORMATION_LABELS = ["A-Monogramm", "Turm", "Helix", "DG"];
+const FORMATIONS = [monogramA, tower, helix, initialsDG];
 const FORM_TARGETS = FORMATIONS.map((f) =>
   Array.from({ length: N }, (_, i) => f(i))
 );
