@@ -27,7 +27,7 @@ export default function Hero() {
         initial={{ opacity: 0, scale: 1.08 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 2, ease }}
-        className="pointer-events-none absolute inset-0 z-[5]"
+        className="pointer-events-none absolute inset-0 z-[5] md:mix-blend-screen"
       >
         <Image
           src="/images/portrait.jpeg"
@@ -35,7 +35,7 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          className="scale-110 object-cover object-[12%_52%] opacity-80 md:scale-[1.45] md:object-contain md:object-[62%_10%] md:opacity-80"
+          className="scale-110 object-cover object-[12%_52%] opacity-80 md:scale-[1.45] md:object-contain md:object-[62%_10%] md:opacity-95"
         />
       </motion.div>
 
