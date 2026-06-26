@@ -41,6 +41,33 @@ const S_DIST_A = sOf(STAGES.orchestrator);
 const S_DIST_B = sOf(STAGES.distribution);
 const S_SETTLE = sOf(STAGES.settlement);
 
+// 3x3 grid texture → little Rubik-cube faces
+function makeGridTex() {
+  const S = 128;
+  const c = document.createElement("canvas");
+  c.width = S;
+  c.height = S;
+  const ctx = c.getContext("2d")!;
+  ctx.clearRect(0, 0, S, S);
+  ctx.fillStyle = "rgba(255,255,255,0.10)";
+  ctx.fillRect(0, 0, S, S);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 8;
+  ctx.strokeRect(4, 4, S - 8, S - 8);
+  ctx.lineWidth = 5;
+  for (let i = 1; i < 3; i++) {
+    const p = (S / 3) * i;
+    ctx.beginPath();
+    ctx.moveTo(p, 6);
+    ctx.lineTo(p, S - 6);
+    ctx.moveTo(6, p);
+    ctx.lineTo(S - 6, p);
+    ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  return tex;
+}
+
 type P = {
   t: number;
   speed: number;
@@ -382,17 +409,17 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
         sy: slot.y,
         dx: dest.x + (Math.random() - 0.5) * 0.6,
         dy: dest.y + (Math.random() - 0.5) * 0.6,
-        base: 0.07 + Math.random() * 0.05,
+        base: 0.16 + Math.random() * 0.1,
         rejected: Math.random() < 0.14,
       });
     }
     const inst = new THREE.InstancedMesh(
-      new THREE.SphereGeometry(1, 10, 10),
+      new THREE.BoxGeometry(1, 1, 1),
       new THREE.MeshBasicMaterial({
+        map: makeGridTex(),
         toneMapped: false,
         transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
       }),
       COUNT
     );
@@ -471,11 +498,13 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
       scale *= fade;
 
       dummy.position.set(x, y, z);
+      dummy.rotation.set(t * 0.5 + pk.seed, t * 0.7 + pk.seed * 1.3, t * 0.3);
       dummy.scale.setScalar(Math.max(0.0001, scale));
       dummy.updateMatrix();
       inst.setMatrixAt(i, dummy.matrix);
       inst.setColorAt(i, col);
     }
+    dummy.rotation.set(0, 0, 0);
     inst.instanceMatrix.needsUpdate = true;
     if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
 
