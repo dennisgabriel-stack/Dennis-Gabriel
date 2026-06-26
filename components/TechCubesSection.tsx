@@ -21,7 +21,7 @@ export default function TechCubesSection() {
               alt=""
               fill
               sizes="100vw"
-              className="object-cover object-[72%_12%] opacity-55"
+              className="object-cover object-[72%_top] opacity-55"
               priority={false}
             />
             {/* fade toward the text on the left */}
@@ -56,6 +56,25 @@ export default function TechCubesSection() {
       </div>
 
       <div className="relative -mt-10 h-[68vh] w-full md:-mt-6 md:h-[74vh]">
+        {/* animated gold aurora behind the cubes */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div
+            className="absolute left-1/4 top-1/3 h-72 w-72 rounded-full blur-[110px]"
+            style={{
+              background: "#c9a86a",
+              opacity: 0.12,
+              animation: "aurora1 20s ease-in-out infinite",
+            }}
+          />
+          <div
+            className="absolute right-1/4 bottom-1/4 h-80 w-80 rounded-full blur-[130px]"
+            style={{
+              background: "#9c8552",
+              opacity: 0.12,
+              animation: "aurora2 26s ease-in-out infinite",
+            }}
+          />
+        </div>
         <TechCubes />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-ink to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />

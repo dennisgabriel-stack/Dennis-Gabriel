@@ -112,3 +112,27 @@ body {
     transform: rotate(360deg);
   }
 }
+
+/* drifting aurora blobs */
+@keyframes aurora1 {
+  0% {
+    transform: translate(-10%, 0) scale(1);
+  }
+  50% {
+    transform: translate(25%, 12%) scale(1.25);
+  }
+  100% {
+    transform: translate(-10%, 0) scale(1);
+  }
+}
+@keyframes aurora2 {
+  0% {
+    transform: translate(10%, 6%) scale(1.15);
+  }
+  50% {
+    transform: translate(-18%, -12%) scale(1);
+  }
+  100% {
+    transform: translate(10%, 6%) scale(1.15);
+  }
+}

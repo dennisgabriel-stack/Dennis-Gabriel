@@ -43,31 +43,66 @@ const TECHS: Tech[] = [
 const N = TECHS.length; // 24
 
 function makeLabel(tech: Tech) {
+  const S = 256;
   const c = document.createElement("canvas");
-  c.width = 256;
-  c.height = 256;
+  c.width = S;
+  c.height = S;
   const ctx = c.getContext("2d")!;
-  ctx.fillStyle = "#121214";
-  ctx.fillRect(0, 0, 256, 256);
+
+  // base gradient
+  const g = ctx.createLinearGradient(0, 0, S, S);
+  g.addColorStop(0, "#1c1c22");
+  g.addColorStop(1, "#0b0b0e");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, S, S);
+
+  // accent corner glow
+  const rg = ctx.createRadialGradient(54, 46, 8, 54, 46, 210);
+  rg.addColorStop(0, tech.accent + "40");
+  rg.addColorStop(1, "transparent");
+  ctx.fillStyle = rg;
+  ctx.fillRect(0, 0, S, S);
+
+  // glowing border
+  ctx.shadowColor = tech.accent;
+  ctx.shadowBlur = 16;
   ctx.strokeStyle = tech.accent;
-  ctx.lineWidth = 6;
-  ctx.strokeRect(10, 10, 236, 236);
+  ctx.lineWidth = 4;
+  ctx.strokeRect(14, 14, S - 28, S - 28);
+  ctx.shadowBlur = 0;
+
+  // top accent bar + node
   ctx.fillStyle = tech.accent;
-  ctx.fillRect(10, 10, 236, 12);
-  ctx.fillStyle = "#f5f4f0";
+  ctx.fillRect(14, 14, S - 28, 6);
+  ctx.beginPath();
+  ctx.arc(32, 42, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.font = "600 15px Helvetica, Arial, sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillStyle = tech.accent + "cc";
+  ctx.fillText("// stack", 46, 47);
+
+  // name
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+  ctx.fillStyle = "#f6f5f1";
   const words = tech.n.split(" ");
   if (words.length > 1 && tech.n.length > 9) {
-    ctx.font = "bold 30px Helvetica, Arial, sans-serif";
-    ctx.fillText(words[0], 128, 112);
-    ctx.fillText(words.slice(1).join(" "), 128, 152);
+    ctx.font = "700 32px Helvetica, Arial, sans-serif";
+    ctx.fillText(words[0], 128, 118);
+    ctx.fillText(words.slice(1).join(" "), 128, 156);
   } else {
-    ctx.font = `bold ${tech.n.length > 9 ? 28 : 38}px Helvetica, Arial, sans-serif`;
-    ctx.fillText(tech.n, 128, 132);
+    ctx.font = `700 ${tech.n.length > 9 ? 30 : 40}px Helvetica, Arial, sans-serif`;
+    ctx.fillText(tech.n, 128, 134);
   }
+
+  // underline accent
+  ctx.fillStyle = tech.accent;
+  ctx.fillRect(98, 196, 60, 3);
+
   const tex = new THREE.CanvasTexture(c);
-  tex.anisotropy = 4;
+  tex.anisotropy = 8;
+  tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
 
@@ -112,6 +147,7 @@ function Blocks() {
     }[] = [];
     const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
     const edgeGeo = new THREE.EdgesGeometry(geo);
+    const glowGeo = new THREE.BoxGeometry(1.42, 1.42, 1.42);
     TECHS.forEach((tech) => {
       const tex = makeLabel(tech);
       const mat = new THREE.MeshBasicMaterial({ map: tex });
@@ -121,12 +157,25 @@ function Blocks() {
         new THREE.LineBasicMaterial({
           color: tech.accent,
           transparent: true,
-          opacity: 0.5,
+          opacity: 0.85,
+          blending: THREE.AdditiveBlending,
+        })
+      );
+      // soft accent glow shell
+      const glow = new THREE.Mesh(
+        glowGeo,
+        new THREE.MeshBasicMaterial({
+          color: tech.accent,
+          transparent: true,
+          opacity: 0.06,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
         })
       );
       const holder = new THREE.Group();
       holder.add(cube);
       holder.add(edges);
+      holder.add(glow);
       // scattered start
       holder.position.set(
         (Math.random() - 0.5) * 24,
@@ -184,6 +233,57 @@ function Blocks() {
   );
 }
 
+function Ambience() {
+  const stars = useRef<THREE.Points>(null);
+  const grid = useRef<THREE.GridHelper>(null);
+
+  const starGeo = useMemo(() => {
+    const SN = 700;
+    const pos = new Float32Array(SN * 3);
+    for (let i = 0; i < SN; i++) {
+      const r = 10 + Math.random() * 22;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+      pos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th) * 0.7;
+      pos[i * 3 + 2] = r * Math.cos(ph);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    return g;
+  }, []);
+
+  const gridObj = useMemo(() => {
+    const g = new THREE.GridHelper(60, 40, 0xc9a86a, 0x6a5a36);
+    (g.material as THREE.Material).transparent = true;
+    (g.material as THREE.Material & { opacity: number }).opacity = 0.12;
+    g.position.y = -7;
+    return g;
+  }, []);
+
+  useFrame((state, delta) => {
+    if (stars.current) stars.current.rotation.y += delta * 0.02;
+    if (grid.current)
+      grid.current.position.z = (Math.sin(state.clock.elapsedTime * 0.1) * 4);
+  });
+
+  return (
+    <>
+      <points ref={stars} geometry={starGeo}>
+        <pointsMaterial
+          size={0.06}
+          color={0xc9a86a}
+          transparent
+          opacity={0.55}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+      <primitive ref={grid} object={gridObj} />
+    </>
+  );
+}
+
 export default function TechCubes() {
   return (
     <Canvas
@@ -192,7 +292,8 @@ export default function TechCubes() {
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
     >
-      <fog attach="fog" args={[0x0a0a0b, 14, 34]} />
+      <fog attach="fog" args={[0x0a0a0b, 16, 42]} />
+      <Ambience />
       <Blocks />
     </Canvas>
   );
