@@ -1,11 +1,26 @@
 "use client";
 
+import Image from "next/image";
 import Reveal from "./Reveal";
 
 export default function About() {
   return (
-    <section id="about" className="relative w-full py-28 md:py-40">
-      <div className="mx-auto max-w-3xl px-6 md:px-10">
+    <section id="about" className="relative w-full overflow-hidden py-28 md:py-40">
+      {/* cinematic portrait background */}
+      <div className="pointer-events-none absolute inset-0 opacity-25">
+        <Image
+          src="/images/about-bg.jpeg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-[50%_25%]"
+          priority={false}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-ink via-ink/80 to-ink" />
+        <div className="absolute inset-0 bg-ink/30" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-3xl px-6 md:px-10">
         <Reveal>
           <p className="mb-6 text-xs uppercase tracking-[0.4em] text-gold">
             Über mich
