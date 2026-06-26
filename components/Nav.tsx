@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import type Lenis from "lenis";
+import Logo from "./Logo";
 
 const links = [
   { label: "Über mich", href: "#about" },
@@ -43,9 +44,13 @@ export default function Nav() {
         <a
           href="#top"
           onClick={(e) => go(e, "#top")}
-          className="font-display text-sm font-bold tracking-[0.25em] text-bone"
+          aria-label="ARCHANGEL — zum Seitenanfang"
+          className="group flex items-center gap-2.5 text-bone transition-[filter] duration-300 hover:[filter:drop-shadow(0_0_10px_rgba(201,168,106,0.55))]"
         >
-          DG<span className="text-gold">.</span>
+          <Logo className="h-9 w-9" />
+          <span className="hidden font-display text-sm font-bold tracking-[0.3em] text-bone sm:inline">
+            ARCHANGEL<span className="text-gold">//</span>DEV
+          </span>
         </a>
         <ul className="hidden items-center gap-9 md:flex">
           {links.map((l) => (
