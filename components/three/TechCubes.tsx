@@ -16,33 +16,33 @@ export type Tech = {
 // complete current stack, grouped by domain (accent per group)
 export const TECHS: Tech[] = [
   // Frontend
-  { n: "Next.js", accent: "#e6c88a", desc: "React-Framework für SSR, Routing & Top-Performance.", url: "https://nextjs.org" },
-  { n: "React", accent: "#e6c88a", desc: "Bibliothek für komponentenbasierte User Interfaces.", url: "https://react.dev" },
-  { n: "TypeScript", accent: "#e6c88a", desc: "Typsicheres JavaScript für robusten, skalierbaren Code.", url: "https://www.typescriptlang.org" },
-  { n: "Tailwind", accent: "#e6c88a", desc: "Utility-First CSS-Framework für schnelles UI-Design.", url: "https://tailwindcss.com" },
-  { n: "Three.js", accent: "#e6c88a", desc: "WebGL-Engine für 3D-Grafik im Browser.", url: "https://threejs.org" },
-  { n: "Framer Motion", accent: "#e6c88a", desc: "Deklarative, physik-basierte Animationen für React.", url: "https://www.framer.com/motion/" },
+  { n: "Next.js", accent: "#e6c88a", desc: "Das React-Framework für Production: Server-Rendering, App-Router, Image-Optimierung und Edge-Funktionen für blitzschnelle Seiten.", url: "https://nextjs.org" },
+  { n: "React", accent: "#e6c88a", desc: "Bibliothek für komponentenbasierte UIs — deklarativ, wiederverwendbar und mit einem riesigen Ökosystem.", url: "https://react.dev" },
+  { n: "TypeScript", accent: "#e6c88a", desc: "JavaScript mit statischen Typen: weniger Bugs, bessere Autovervollständigung und sicheres Refactoring in großen Codebasen.", url: "https://www.typescriptlang.org" },
+  { n: "Tailwind", accent: "#e6c88a", desc: "Utility-First CSS: konsistentes, voll responsives Design direkt im Markup — ohne CSS-Wildwuchs.", url: "https://tailwindcss.com" },
+  { n: "Three.js", accent: "#e6c88a", desc: "Die führende WebGL-Bibliothek für 3D im Browser — Szenen, Materialien, Licht und Echtzeit-Rendering.", url: "https://threejs.org" },
+  { n: "Framer Motion", accent: "#e6c88a", desc: "Produktionsreife Animationen für React: Gesten, Layout-Transitions und Spring-Physik mit minimalem Code.", url: "https://www.framer.com/motion/" },
   // Backend
-  { n: "Node.js", accent: "#c9a86a", desc: "Event-getriebene JavaScript-Runtime fürs Backend.", url: "https://nodejs.org" },
-  { n: "Express", accent: "#c9a86a", desc: "Minimalistisches Web-Framework für Node.js.", url: "https://expressjs.com" },
-  { n: "WebSocket", accent: "#c9a86a", desc: "Bidirektionale Echtzeit-Verbindungen.", url: "https://developer.mozilla.org/docs/Web/API/WebSockets_API" },
-  { n: "GraphQL", accent: "#c9a86a", desc: "Typisierte Abfragesprache für flexible APIs.", url: "https://graphql.org" },
-  { n: "PostgreSQL", accent: "#c9a86a", desc: "Leistungsstarke relationale Datenbank.", url: "https://www.postgresql.org" },
-  { n: "Redis", accent: "#c9a86a", desc: "In-Memory-Store für Cache, Sessions & Pub/Sub.", url: "https://redis.io" },
+  { n: "Node.js", accent: "#c9a86a", desc: "Asynchrone JavaScript-Runtime für skalierbare Server, APIs und Echtzeit-Dienste.", url: "https://nodejs.org" },
+  { n: "Express", accent: "#c9a86a", desc: "Schlankes, flexibles Node-Framework für REST-APIs, Middleware-Ketten und Routing.", url: "https://expressjs.com" },
+  { n: "WebSocket", accent: "#c9a86a", desc: "Persistente, bidirektionale Verbindungen für Live-Updates, Chats und Echtzeit-Daten.", url: "https://developer.mozilla.org/docs/Web/API/WebSockets_API" },
+  { n: "GraphQL", accent: "#c9a86a", desc: "Typisierte API-Abfragesprache: der Client holt exakt die Daten, die er braucht — nicht mehr, nicht weniger.", url: "https://graphql.org" },
+  { n: "PostgreSQL", accent: "#c9a86a", desc: "Robuste relationale Open-Source-Datenbank mit ACID-Transaktionen, JSON-Support und mächtigen Queries.", url: "https://www.postgresql.org" },
+  { n: "Redis", accent: "#c9a86a", desc: "Ultraschneller In-Memory-Store für Caching, Sessions, Rate-Limiting und Pub/Sub.", url: "https://redis.io" },
   // Infra
-  { n: "Docker", accent: "#9c8552", desc: "Container für reproduzierbare Deployments.", url: "https://www.docker.com" },
-  { n: "CI/CD", accent: "#9c8552", desc: "Automatisierte Builds, Tests & Deployments.", url: "https://github.com/features/actions" },
-  { n: "AWS Cloud", accent: "#9c8552", desc: "Skalierbare Cloud-Infrastruktur & Services.", url: "https://aws.amazon.com" },
-  { n: "Git", accent: "#9c8552", desc: "Verteilte Versionskontrolle für Code.", url: "https://git-scm.com" },
-  { n: "Linux", accent: "#9c8552", desc: "Open-Source-Betriebssystem für Server.", url: "https://www.linux.org" },
-  { n: "Monitoring", accent: "#9c8552", desc: "Metriken, Logs, Dashboards & Alerting.", url: "https://grafana.com" },
+  { n: "Docker", accent: "#9c8552", desc: "Container kapseln App und Umgebung — identische, reproduzierbare Deployments von lokal bis Cloud.", url: "https://www.docker.com" },
+  { n: "CI/CD", accent: "#9c8552", desc: "Automatisierte Pipelines für Build, Test und Deployment — schnelle, verlässliche Releases.", url: "https://github.com/features/actions" },
+  { n: "AWS Cloud", accent: "#9c8552", desc: "Skalierbare Cloud-Infrastruktur: Compute, Storage, Datenbanken und Netzwerk on demand.", url: "https://aws.amazon.com" },
+  { n: "Git", accent: "#9c8552", desc: "Verteilte Versionskontrolle für Branches, Code-Reviews und eine nachvollziehbare Historie.", url: "https://git-scm.com" },
+  { n: "Linux", accent: "#9c8552", desc: "Stabiles, quelloffenes Server-Betriebssystem — das Fundament moderner Web-Infrastruktur.", url: "https://www.linux.org" },
+  { n: "Monitoring", accent: "#9c8552", desc: "Metriken, Logs und Dashboards mit Alerting — volle Sichtbarkeit auf Systeme in Echtzeit.", url: "https://grafana.com" },
   // AI / Design / Web3
-  { n: "KI / LLM", accent: "#f5f4f0", desc: "Große Sprachmodelle & KI-Integration in Produkte.", url: "https://www.anthropic.com" },
-  { n: "Automation", accent: "#f5f4f0", desc: "Workflow-Automatisierung & Integrationen.", url: "https://n8n.io" },
-  { n: "Figma", accent: "#f5f4f0", desc: "Kollaboratives Interface- & Prototyp-Design.", url: "https://www.figma.com" },
-  { n: "UI / UX", accent: "#f5f4f0", desc: "Nutzerzentriertes Design & Interaktion.", url: "https://www.interaction-design.org" },
-  { n: "Web3", accent: "#f5f4f0", desc: "Dezentrale Apps & Blockchain-Anbindung.", url: "https://ethereum.org" },
-  { n: "Smart Contracts", accent: "#f5f4f0", desc: "On-Chain-Programmlogik & Verträge.", url: "https://soliditylang.org" },
+  { n: "KI / LLM", accent: "#f5f4f0", desc: "Integration großer Sprachmodelle für Automatisierung, Agenten und intelligente Produkt-Features.", url: "https://www.anthropic.com" },
+  { n: "Automation", accent: "#f5f4f0", desc: "Verkettung von Diensten zu automatisierten Workflows — weniger Handarbeit, mehr Output.", url: "https://n8n.io" },
+  { n: "Figma", accent: "#f5f4f0", desc: "Kollaboratives Design-Tool für UI, Prototypen und gemeinsame Design-Systeme im Team.", url: "https://www.figma.com" },
+  { n: "UI / UX", accent: "#f5f4f0", desc: "Nutzerzentriertes Design: klare Strukturen, intuitive Flows und durchdachte Interaktion.", url: "https://www.interaction-design.org" },
+  { n: "Web3", accent: "#f5f4f0", desc: "Dezentrale Anwendungen auf der Blockchain — Wallets, Verträge und On-Chain-Logik.", url: "https://ethereum.org" },
+  { n: "Smart Contracts", accent: "#f5f4f0", desc: "Selbstausführende Verträge auf der Blockchain — vertrauenslos, transparent und unveränderlich.", url: "https://soliditylang.org" },
 ];
 
 const N = TECHS.length; // 24
@@ -232,10 +232,10 @@ function Blocks({
       if (focusing && i === focused) {
         // fly to the camera, grow, face viewer, slow spin
         b.mesh.position.lerp(b.mesh.parent!.worldToLocal(front.clone()), 0.12);
-        b.mesh.scale.setScalar(lerp(b.mesh.scale.x, 2.6, 0.1));
-        b.mesh.rotation.x = lerp(b.mesh.rotation.x, 0, 0.1);
+        b.mesh.scale.setScalar(lerp(b.mesh.scale.x, 2.0, 0.1));
         b.mesh.rotation.z = lerp(b.mesh.rotation.z, 0, 0.1);
-        b.mesh.rotation.y += delta * 0.6;
+        b.mesh.rotation.y += delta * 0.55; // spin on Y …
+        b.mesh.rotation.x += delta * 0.4; // … and X simultaneously
         b.mats.forEach((m, j) => (m.opacity = b.baseOpacity[j]));
       } else {
         const target = targets[i];
@@ -278,9 +278,13 @@ function Blocks({
           object={b.mesh}
           onClick={(e: { stopPropagation: () => void }) => {
             e.stopPropagation();
-            setFocused(focused === i ? null : i);
-            if (typeof window !== "undefined")
-              window.dispatchEvent(new CustomEvent("ux-click"));
+            const willFocus = focused !== i;
+            setFocused(willFocus ? i : null);
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent(willFocus ? "ux-woosh" : "ux-click")
+              );
+            }
           }}
         />
       ))}
