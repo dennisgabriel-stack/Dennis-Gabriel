@@ -7,6 +7,7 @@ import {
   useScroll,
   useTransform,
   useMotionValueEvent,
+  useMotionTemplate,
   type MotionValue,
 } from "framer-motion";
 
@@ -98,6 +99,13 @@ export default function TransactionSection() {
     target: ref,
     offset: ["start start", "end end"],
   });
+  // as the camera punches through the settlement wall, dissolve the scene so
+  // the next section reads as the space behind the construct
+  const flyOpacity = useTransform(scrollYProgress, [0.93, 1], [1, 0]);
+  const flyBlur = useTransform(scrollYProgress, [0.93, 1], [0, 8]);
+  const flyScale = useTransform(scrollYProgress, [0.93, 1], [1, 1.06]);
+  const flyFilter = useMotionTemplate`blur(${flyBlur}px)`;
+
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     progress.current = v;
     // woosh each time we fly through a stage boundary
@@ -136,9 +144,12 @@ export default function TransactionSection() {
         </div>
 
         {/* 3D orchestration pipeline */}
-        <div className="absolute inset-0 z-0">
+        <motion.div
+          style={{ opacity: flyOpacity, filter: flyFilter, scale: flyScale }}
+          className="absolute inset-0 z-0"
+        >
           <TransactionFlow progressRef={progress} />
-        </div>
+        </motion.div>
 
         {/* cinematic depth overlays */}
         <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_45%,#0a0a0b_95%)]" />

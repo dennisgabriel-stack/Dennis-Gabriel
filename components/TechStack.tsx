@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Reveal from "./Reveal";
 import LayerDial from "./LayerDial";
 
@@ -14,10 +15,23 @@ const ACCENTS = ["#e6c88a", "#c9a86a", "#9c8552", "#c9a05a"];
 export default function TechStack() {
   const selRef = useRef(0);
   const [sel, setSel] = useState(0);
+  const ref = useRef<HTMLElement>(null);
+
+  // emerge-from-depth: as you fly through the construct wall above, this
+  // section rushes forward from small → full, so it reads as the space behind
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "start 28%"],
+  });
+  const depthScale = useTransform(scrollYProgress, [0, 1], [0.78, 1]);
+  const depthOpacity = useTransform(scrollYProgress, [0, 0.55], [0, 1]);
+  const depthBlur = useTransform(scrollYProgress, [0, 0.6], [10, 0]);
+  const depthFilter = useTransform(depthBlur, (b) => `blur(${b}px)`);
 
   return (
     <section
       id="stack"
+      ref={ref}
       className="relative w-full overflow-hidden py-28 transition-colors duration-700 md:py-40"
     >
       {/* layer-reactive colour wash */}
@@ -33,7 +47,14 @@ export default function TechStack() {
       </div>
       <div className="pointer-events-none absolute inset-0 z-[1] bg-[radial-gradient(ellipse_at_center,transparent_38%,#0a0a0b_92%)]" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
+      <motion.div
+        style={{
+          scale: depthScale,
+          opacity: depthOpacity,
+          filter: depthFilter,
+        }}
+        className="relative z-10 mx-auto max-w-7xl px-6 md:px-10"
+      >
         <div className="mb-16 max-w-3xl">
           <Reveal>
             <p className="mb-6 text-xs uppercase tracking-[0.4em] text-gold">
@@ -61,7 +82,7 @@ export default function TechStack() {
             setSel(i);
           }}
         />
-      </div>
+      </motion.div>
     </section>
   );
 }

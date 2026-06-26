@@ -462,8 +462,12 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     const t = state.clock.elapsedTime;
     const p = progressRef.current ?? 0;
     const cam = state.camera;
-    const camZ = lerp(CAM_START, CAM_END, p);
-    const focusZ = camZ - FOCUS_AHEAD;
+    // final stretch: punch the camera straight THROUGH the settlement wall so
+    // it feels like you fly through the construct into the section behind it
+    const through = ss(0.88, 1, p);
+    const camZ = lerp(CAM_START, CAM_END, p) - through * 18;
+    // keep the construct lit while we fly into/through it
+    const focusZ = lerp(camZ - FOCUS_AHEAD, ST.settle, through * 0.6);
     const b = built;
 
     // spinners + pulses
@@ -581,7 +585,11 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
 
     // ===== settlement construct: stack up, then loop =====
     const cs = b.settleState;
-    if (cs.full > 0) {
+    if (p > 0.84) {
+      // approaching the seam — hold a complete wall to fly through
+      cs.placed = b.constructSlots.length;
+      cs.full = 0;
+    } else if (cs.full > 0) {
       cs.full -= dt;
       if (cs.full <= 0) {
         cs.placed = 0;
