@@ -157,7 +157,7 @@ export default function LayerDial({
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-12 md:flex-row md:items-center md:justify-center md:gap-20">
+    <div className="flex flex-col-reverse items-center gap-12 md:flex-row-reverse md:items-center md:justify-center md:gap-20">
       {/* ===== rotary dial ===== */}
       <div
         ref={wrapRef}
@@ -327,46 +327,90 @@ export default function LayerDial({
       </div>
 
       {/* ===== layer card ===== */}
-      <div className="relative h-[260px] w-full max-w-md">
+      <div className="relative h-[320px] w-full max-w-md">
         <AnimatePresence mode="wait">
           <motion.div
             key={layer.tag}
-            initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+            initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -18, filter: "blur(6px)" }}
-            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-            className="glass absolute inset-0 overflow-hidden rounded-2xl p-7"
-            style={{ boxShadow: `0 0 50px ${layer.accent}22` }}
+            exit={{ opacity: 0, y: -18, filter: "blur(8px)" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="glass absolute inset-0 overflow-hidden rounded-2xl"
+            style={{
+              boxShadow: `0 0 60px ${layer.accent}26`,
+              border: `1px solid ${layer.accent}26`,
+            }}
           >
+            {/* top accent beam */}
             <div
-              className="absolute left-0 top-0 h-full w-1.5"
-              style={{ background: layer.accent }}
+              className="absolute inset-x-0 top-0 h-[3px]"
+              style={{
+                background: `linear-gradient(90deg, transparent, ${layer.accent}, transparent)`,
+              }}
             />
-            <div className="flex items-center gap-4">
+            {/* corner brackets */}
+            {[
+              "left-3 top-3 border-l border-t",
+              "right-3 top-3 border-r border-t",
+              "left-3 bottom-3 border-l border-b",
+              "right-3 bottom-3 border-r border-b",
+            ].map((cls) => (
               <span
-                className="font-display text-5xl font-black"
-                style={{ color: layer.accent }}
-              >
-                {layer.tag}
-              </span>
-              <h3 className="font-display text-xl font-semibold text-bone md:text-2xl">
-                {layer.name}
-              </h3>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {layer.tech.map((t) => (
+                key={cls}
+                className={`absolute h-4 w-4 ${cls}`}
+                style={{ borderColor: `${layer.accent}66` }}
+              />
+            ))}
+
+            <div className="p-7">
+              <div className="flex items-center gap-4">
                 <span
-                  key={t}
-                  className="rounded-full border px-3 py-1.5 text-xs text-bone/90"
-                  style={{ borderColor: `${layer.accent}33` }}
+                  className="flex h-16 w-16 items-center justify-center rounded-xl font-display text-4xl font-black"
+                  style={{
+                    color: "#0a0a0b",
+                    background: `linear-gradient(135deg, ${layer.accent}, ${layer.accent}99)`,
+                    boxShadow: `0 0 26px ${layer.accent}66`,
+                  }}
                 >
-                  {t}
+                  {layer.tag}
                 </span>
-              ))}
+                <div>
+                  <h3 className="font-display text-xl font-bold text-bone md:text-2xl">
+                    {layer.name}
+                  </h3>
+                  <p className="mt-1 text-[10px] uppercase tracking-[0.3em] text-muted">
+                    Schicht {selected + 1} / 4
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                {layer.tech.map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-lg border px-3 py-1.5 text-xs text-bone/90 backdrop-blur-sm"
+                    style={{
+                      borderColor: `${layer.accent}40`,
+                      background: `${layer.accent}12`,
+                    }}
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-6">
+                <p
+                  className="text-[10px] uppercase tracking-[0.3em]"
+                  style={{ color: layer.accent }}
+                >
+                  Fokus
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-muted">
+                  {layer.purpose}
+                </p>
+              </div>
             </div>
-            <p className="mt-6 text-sm leading-relaxed text-muted">
-              {layer.purpose}
-            </p>
           </motion.div>
         </AnimatePresence>
       </div>
