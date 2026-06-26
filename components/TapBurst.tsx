@@ -44,7 +44,7 @@ function spawn(x: number, y: number) {
           opacity: 0,
         },
       ],
-      { duration: 620 + Math.random() * 160, easing: "cubic-bezier(0.16,1,0.3,1)" }
+      { duration: 1050 + Math.random() * 300, easing: "cubic-bezier(0.16,1,0.3,1)" }
     );
     anim.onfinish = () => el.remove();
   }

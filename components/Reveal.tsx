@@ -22,6 +22,10 @@ export default function Reveal({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.9, delay, ease }}
+      onViewportEnter={() => {
+        if (typeof window !== "undefined")
+          window.dispatchEvent(new CustomEvent("ux-textin"));
+      }}
       className={className}
     >
       {children}

@@ -136,6 +136,36 @@ export default function SoundManager() {
     voice(523.25, 0.32, "triangle", 0.05);
   };
 
+  /* throttle gate per sound key */
+  const tl = useRef<Record<string, number>>({});
+  const gate = (k: string, ms: number) => {
+    const n = performance.now();
+    if (n - (tl.current[k] || 0) < ms) return false;
+    tl.current[k] = n;
+    return true;
+  };
+
+  /* soft rising swell when text appears */
+  const playTextIn = () => {
+    if (!gate("ti", 90)) return;
+    voice(880, 0.5, "sine", 0.04); // A5
+    voice(1174.66, 0.6, "sine", 0.028, 0.07); // D6
+  };
+
+  /* gentle falling tone when text leaves */
+  const playTextOut = () => {
+    if (!gate("to", 90)) return;
+    voice(659.25, 0.45, "sine", 0.032); // E5
+    voice(440, 0.55, "sine", 0.022, 0.06); // A4
+  };
+
+  /* soft snap as a cube forms / locks in */
+  const playBlock = () => {
+    if (!gate("bl", 45)) return;
+    voice(330, 0.14, "triangle", 0.05);
+    voice(880, 0.1, "sine", 0.03, 0.005);
+  };
+
   /* a low, glorious swell when the cathedral opens */
   const playEnter = () => {
     chime(523.25, 0.09);
@@ -224,12 +254,18 @@ export default function SoundManager() {
     const onClick = () => playClick();
     const onWoosh = () => playWoosh();
     const onBurst = () => playBurst();
+    const onTextIn = () => playTextIn();
+    const onTextOut = () => playTextOut();
+    const onBlock = () => playBlock();
     window.addEventListener("pointerover", over);
     window.addEventListener("click", click);
     window.addEventListener("ux-hover", onHover);
     window.addEventListener("ux-click", onClick);
     window.addEventListener("ux-woosh", onWoosh);
     window.addEventListener("ux-burst", onBurst);
+    window.addEventListener("ux-textin", onTextIn);
+    window.addEventListener("ux-textout", onTextOut);
+    window.addEventListener("ux-block", onBlock);
     return () => {
       window.removeEventListener("pointerover", over);
       window.removeEventListener("click", click);
@@ -237,6 +273,9 @@ export default function SoundManager() {
       window.removeEventListener("ux-click", onClick);
       window.removeEventListener("ux-woosh", onWoosh);
       window.removeEventListener("ux-burst", onBurst);
+      window.removeEventListener("ux-textin", onTextIn);
+      window.removeEventListener("ux-textout", onTextOut);
+      window.removeEventListener("ux-block", onBlock);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled]);

@@ -71,12 +71,24 @@ function StoryPanel({
 export default function ArchitectureSection() {
   const ref = useRef<HTMLDivElement>(null);
   const progress = useRef(0);
+  const activeCaption = useRef(-1);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
   });
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     progress.current = v;
+    // sound when a caption appears / disappears
+    let idx = -1;
+    CENTERS.forEach((c, i) => {
+      if (v > c - 0.1 && v < c + 0.1) idx = i;
+    });
+    if (idx !== activeCaption.current) {
+      if (idx > activeCaption.current)
+        window.dispatchEvent(new CustomEvent("ux-textin"));
+      else window.dispatchEvent(new CustomEvent("ux-textout"));
+      activeCaption.current = idx;
+    }
   });
 
   // blueprint annotations fade in with the dimension lines

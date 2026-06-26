@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useMemo, type MutableRefObject } from "react";
+import { useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
 
 const { clamp } = THREE.MathUtils;
@@ -16,6 +16,7 @@ function Structure({
 }: {
   progressRef: MutableRefObject<number>;
 }) {
+  const visibleCount = useRef(0);
   const built = useMemo(() => {
     const S = 1.0;
     const GAP = 0.16;
@@ -119,11 +120,18 @@ function Structure({
     outer.scale.setScalar(0.85 + o * 0.15);
 
     // cells reveal from the centre outwards
+    let visible = 0;
     for (const { seg, thr } of cells) {
       const e = ss(thr, thr + 0.12, p);
       seg.scale.setScalar(Math.max(0.0001, e));
       (seg.material as THREE.LineBasicMaterial).opacity = e * 0.9;
+      if (e > 0.5) visible++;
     }
+    // a soft snap each time another cube locks into place
+    if (visible > visibleCount.current) {
+      window.dispatchEvent(new CustomEvent("ux-block"));
+    }
+    visibleCount.current = visible;
 
     // dimension lines fade in last
     dimMat.opacity = ss(0.6, 0.9, p) * 0.7;
