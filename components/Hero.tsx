@@ -45,7 +45,7 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          className="hidden scale-[1.45] object-contain object-[62%_24%] opacity-95 md:block"
+          className="hidden scale-[1.45] object-contain object-[62%_24%] opacity-95 md:block md:[mask-image:radial-gradient(92%_92%_at_55%_42%,#000_70%,transparent_100%)] md:[-webkit-mask-image:radial-gradient(92%_92%_at_55%_42%,#000_70%,transparent_100%)]"
         />
       </motion.div>
 
@@ -55,7 +55,7 @@ export default function Hero() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-48 bg-gradient-to-t from-ink to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-ink to-transparent" />
 
-      <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col px-6 pb-14 pt-24 md:justify-start md:px-10 md:pb-0 md:pt-[13vh]">
+      <div className="relative z-20 mx-auto flex h-full w-full max-w-7xl flex-col px-6 pb-14 pt-24 md:ml-0 md:justify-start md:pb-0 md:pl-[5vw] md:pr-10 md:pt-[13vh]">
         <div>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
