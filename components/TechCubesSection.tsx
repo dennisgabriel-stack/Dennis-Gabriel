@@ -85,23 +85,22 @@ export default function TechCubesSection() {
       className="relative w-full overflow-hidden py-24 md:py-32"
     >
       <div className="relative z-30 mx-auto max-w-7xl px-6 md:px-10">
-        {/* portrait sized to the text block (matches sketched area), soft on all sides */}
+        {/* thinking-pose portrait (cutout) behind the heading, like the sketch */}
         <div className="relative">
-          <div className="pointer-events-none absolute left-[-22%] right-[38%] top-10 z-0 bottom-0 md:left-auto md:right-0 md:bottom-0 md:top-[-1.5rem] md:w-[72%]">
+          <div className="pointer-events-none absolute inset-x-0 -top-16 z-0 h-[460px] overflow-hidden md:-top-24 md:h-[600px]">
             <Image
-              src="/images/stack-bg.jpeg"
+              src="/images/stack-person.png"
               alt=""
               fill
               sizes="100vw"
-              className="object-cover object-[60%_top] opacity-55"
+              className="object-contain object-[center_top] opacity-55 md:object-[72%_top]"
               priority={false}
             />
-            {/* fade toward the text on the left */}
-            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-ink/55 to-ink" />
-            {/* feather every edge */}
+            {/* darken toward the text (left) so the heading stays readable */}
+            <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/55 to-transparent" />
+            {/* feather every edge into the background */}
             <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-ink to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
-            <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-ink to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-ink to-transparent" />
           </div>
 
           <div className="relative z-10">
