@@ -28,7 +28,7 @@ const STORY = [
   {
     k: "03 · Struktur",
     t: "Die Ordnung",
-    d: "Was zufällig wirkt, ist konstruiert. Jede Verbindung trägt Last, jede Kante hat ein Maß.",
+    d: "Nichts ist zufällig und alles ist bedacht konstruiert. Jede Verbindung trägt Last, jede Kante hat ein Maß.",
   },
   {
     k: "04 · Ganzes",
