@@ -1,8 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+
+const AmbientParticles = dynamic(
+  () => import("./three/AmbientParticles"),
+  { ssr: false }
+);
 
 export default function About() {
   const ref = useRef<HTMLDivElement>(null);
@@ -21,10 +27,33 @@ export default function About() {
   return (
     <section id="about" ref={ref} className="relative h-[220vh] w-full">
       <div className="sticky top-0 flex h-[100svh] w-full items-center overflow-hidden">
+        {/* continuous animated background (matches the section above) */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <div
+            className="absolute left-1/3 top-1/4 h-80 w-80 rounded-full blur-[140px]"
+            style={{
+              background: "#c9a86a",
+              opacity: 0.1,
+              animation: "aurora1 24s ease-in-out infinite",
+            }}
+          />
+          <div
+            className="absolute bottom-1/4 right-1/3 h-96 w-96 rounded-full blur-[150px]"
+            style={{
+              background: "#9c8552",
+              opacity: 0.1,
+              animation: "aurora2 30s ease-in-out infinite",
+            }}
+          />
+        </div>
+        <div className="absolute inset-0 z-0">
+          <AmbientParticles />
+        </div>
+
         {/* cinematic portrait — seen first */}
         <motion.div
           style={{ opacity: imgOpacity }}
-          className="pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-0 z-[1]"
         >
           <motion.div style={{ scale: imgScale }} className="absolute inset-0">
             <Image
@@ -36,7 +65,7 @@ export default function About() {
               priority={false}
             />
           </motion.div>
-          <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/85 to-ink/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/40 to-transparent" />
           <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-ink to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-ink to-transparent" />
         </motion.div>
