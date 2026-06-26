@@ -28,11 +28,11 @@ export default function About() {
         >
           <motion.div style={{ scale: imgScale }} className="absolute inset-0">
             <Image
-              src="/images/about-bg.jpeg"
+              src="/images/about-bg-cut.png"
               alt=""
               fill
               sizes="100vw"
-              className="object-cover object-[40%_10%]"
+              className="scale-90 object-contain object-[72%_30%] md:scale-[0.85] md:object-[78%_30%]"
               priority={false}
             />
           </motion.div>
