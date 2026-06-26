@@ -184,7 +184,7 @@ export default function TechCubesSection() {
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: 20, filter: "blur(8px)" }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="glass absolute inset-x-4 bottom-10 z-30 mx-auto max-w-sm overflow-hidden rounded-2xl p-6"
+              className="glass absolute inset-x-4 bottom-4 z-30 mx-auto max-w-sm overflow-hidden rounded-2xl p-6"
               style={{
                 boxShadow: `0 0 50px ${tech.accent}33`,
                 border: `1px solid ${tech.accent}40`,
