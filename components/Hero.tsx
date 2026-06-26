@@ -56,7 +56,7 @@ export default function Hero() {
             Full-Stack · Blockchain · KI
           </motion.p>
 
-          <h1 className="font-display text-[15vw] font-bold leading-[0.86] tracking-tight md:text-[10vw] lg:text-[8.5vw]">
+          <h1 className="mt-[36vh] font-display text-[15vw] font-bold leading-[0.86] tracking-tight md:mt-0 md:text-[10vw] lg:text-[8.5vw]">
             <span className="reveal-line">
               <motion.span
                 initial={{ y: "110%" }}
