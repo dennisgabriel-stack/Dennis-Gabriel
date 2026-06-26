@@ -347,11 +347,11 @@ function Blocks({
     const reassembling = t < s.reassembleUntil;
     const targets = FORM_TARGETS[s.formIndex];
 
-    // focus fly-in target, kept low so it stays in front of the canvas
+    // focus fly-in target — upper-centre of the canvas, above the info card
     const front = tmp
       .copy(camera.position)
       .add(v3.set(0, 0, -6.5).applyQuaternion(camera.quaternion));
-    front.y -= 2.3;
+    front.y += 1.1;
 
     // integrate physics
     for (let i = 0; i < blocks.length; i++) {
