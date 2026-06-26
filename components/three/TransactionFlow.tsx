@@ -30,6 +30,25 @@ const C_GOLDB = new THREE.Color(0xe6c88a);
 const C_BONE = new THREE.Color(0xf5f4f0);
 const C_RED = new THREE.Color(0xc0392b);
 
+// 4 data types (decision-tree leaves), on-brand gold variations
+const TYPE_COLORS = [
+  new THREE.Color(0xe6c88a),
+  new THREE.Color(0xc9a86a),
+  new THREE.Color(0xbfa779),
+  new THREE.Color(0xd8b87a),
+];
+
+// decision-tree layout inside the sequencing stage (z descending)
+const ORDER_IN = ST.order + 7; // root
+const ORDER_MID = ST.order; // level-1 split
+const ORDER_OUT = ST.order - 7; // leaves (classified bins)
+const L1Y = 2.2; // level-1 vertical split
+const LEAFX = 2.6; // leaf horizontal split
+const leafPos = (type: number) => ({
+  x: type & 1 ? LEAFX : -LEAFX,
+  y: type & 2 ? -L1Y : L1Y,
+});
+
 function makeGridTex() {
   const S = 128;
   const c = document.createElement("canvas");
@@ -64,6 +83,8 @@ type Pkt = {
   oy: number;
   lx: number;
   ly: number;
+  y1: number;
+  type: number;
   dx: number;
   dy: number;
   bad: boolean;
@@ -139,37 +160,51 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
       reg(ring, ring.position.z);
     }
 
-    // ===== 2) SEQUENCING — ordered lane lattice (slots) =====
-    const GC = 6;
-    const GR = 4;
-    const slots: { x: number; y: number }[] = [];
-    for (let r = 0; r < GR; r++)
-      for (let c = 0; c < GC; c++)
-        slots.push({ x: (c - (GC - 1) / 2) * 1.25, y: (r - (GR - 1) / 2) * 1.25 });
-    const latticeFrame = new THREE.Mesh(
-      new THREE.TorusGeometry(4.4, 0.02, 6, 4), // diamond frame
-      gold(0.0)
-    );
-    const seqFrame = new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(8, 5.6, 0.3)),
-      new THREE.LineBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.3 })
-    );
-    seqFrame.position.z = ST.order;
-    group.add(seqFrame);
-    reg(seqFrame, ST.order);
-    void latticeFrame;
-    // lane guide lines from order → security
-    slots.forEach((s2) => {
-      const g = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(s2.x, s2.y, ST.order),
-        new THREE.Vector3(s2.x, s2.y, ST.core),
-      ]);
+    // ===== 2) SEQUENCING — decision tree that classifies each packet =====
+    const node = (x: number, y: number, z: number, r: number, op: number) => {
+      const n = new THREE.Mesh(new THREE.OctahedronGeometry(r), gold(op));
+      n.position.set(x, y, z);
+      group.add(n);
+      return n;
+    };
+    const edge = (a: THREE.Vector3, b: THREE.Vector3, op: number) => {
       const ln = new THREE.Line(
-        g,
-        new THREE.LineBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.06 })
+        new THREE.BufferGeometry().setFromPoints([a, b]),
+        new THREE.LineBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: op })
       );
       group.add(ln);
-      reg(ln, (ST.order + ST.security) / 2);
+      reg(ln, (a.z + b.z) / 2);
+      return ln;
+    };
+    // root → 2 level-1 nodes → 4 leaves
+    const root = new THREE.Vector3(0, 0, ORDER_IN);
+    node(0, 0, ORDER_IN, 0.22, 0.9);
+    reg(group.children[group.children.length - 1], ORDER_IN);
+    pulse.push({ o: group.children[group.children.length - 1], ph: 0 });
+    [L1Y, -L1Y].forEach((y1) => {
+      const l1 = new THREE.Vector3(0, y1, ORDER_MID);
+      edge(root, l1, 0.3);
+      node(0, y1, ORDER_MID, 0.18, 0.85);
+      reg(group.children[group.children.length - 1], ORDER_MID);
+      pulse.push({ o: group.children[group.children.length - 1], ph: y1 });
+      [LEAFX, -LEAFX].forEach((lx) => {
+        const leaf = new THREE.Vector3(lx, y1, ORDER_OUT);
+        edge(l1, leaf, 0.22);
+        // classified bin marker, coloured by type
+        const type = (y1 < 0 ? 2 : 0) + (lx > 0 ? 1 : 0);
+        const bin = new THREE.Mesh(
+          new THREE.TorusGeometry(0.4, 0.04, 8, 28),
+          new THREE.MeshBasicMaterial({
+            color: TYPE_COLORS[type],
+            transparent: true,
+            opacity: 0.85,
+          })
+        );
+        bin.position.copy(leaf);
+        group.add(bin);
+        reg(bin, ORDER_OUT);
+        pulse.push({ o: bin, ph: type });
+      });
     });
 
     // ===== 3) SECURITY — gates + scan + padlock =====
@@ -309,16 +344,19 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     for (let i = 0; i < COUNT; i++) {
       const ang = Math.random() * Math.PI * 2;
       const rad = 3 + Math.random() * 6;
-      const slot = slots[i % slots.length];
-      const dest = dests[i % dests.length];
+      const type = i % 4;
+      const leaf = leafPos(type);
+      const dest = dests[type % dests.length];
       pkts.push({
         t: i / COUNT,
         sp: 0.03 + Math.random() * 0.025,
         seed: Math.random() * 100,
         ox: Math.cos(ang) * rad,
         oy: Math.sin(ang) * rad,
-        lx: slot.x,
-        ly: slot.y,
+        lx: leaf.x,
+        ly: leaf.y,
+        y1: leaf.y,
+        type,
         dx: dest.x,
         dy: dest.y,
         bad: Math.random() < 0.18,
@@ -438,23 +476,41 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
         continue;
       }
 
-      const mO = ss(SPAWN, ST.order, SPAWN - (SPAWN - z)); // chaos→order
-      const orderMix = ss(0, 1, clamp((SPAWN - z) / (SPAWN - ST.order), 0, 1));
-      const distMix = clamp((ST.core - z) / (ST.core - ST.dist), 0, 1);
+      // ----- decision-tree routing -----
+      const toRoot = clamp((SPAWN - z) / (SPAWN - ORDER_IN), 0, 1);
+      const lvl1 = ss(0, 1, clamp((ORDER_IN - z) / (ORDER_IN - ORDER_MID), 0, 1));
+      const lvl2 = ss(0, 1, clamp((ORDER_MID - z) / (ORDER_MID - ORDER_OUT), 0, 1));
+      const distMix = clamp((ORDER_OUT - z) / (ORDER_OUT - ST.dist), 0, 1);
       const settleMix = clamp((ST.dist - z) / (ST.dist - ST.settle), 0, 1);
-      void mO;
 
-      let x = lerp(lerp(pk.ox, pk.lx, orderMix), pk.dx, distMix);
-      let y = lerp(lerp(pk.oy, pk.ly, orderMix), pk.dy, distMix);
-      // converge toward centre to enter the construct at settlement
-      x = lerp(x, pk.lx * 0.6, settleMix);
-      y = lerp(y, pk.ly * 0.6, settleMix);
+      let x: number;
+      let y: number;
+      if (z > ORDER_IN) {
+        // chaos → tree root
+        x = lerp(pk.ox, 0, toRoot);
+        y = lerp(pk.oy, 0, toRoot);
+      } else {
+        y = lerp(0, pk.y1, lvl1); // 1st decision (vertical branch)
+        x = lerp(0, pk.lx, lvl2); // 2nd decision (horizontal branch → leaf)
+        x = lerp(x, pk.dx, distMix); // routed to its type's destination
+        y = lerp(y, pk.dy, distMix);
+        x = lerp(x, pk.lx * 0.5, settleMix); // into the settlement construct
+        y = lerp(y, pk.ly * 0.5, settleMix);
+      }
 
-      // colour by stage
-      if (z > ST.order) col.copy(C_GRAY); // chaos
-      else if (z > ST.security) col.lerpColors(C_GRAY, C_GOLD, orderMix); // sorted
-      else if (z > ST.core) col.copy(C_GOLDB); // passed security
-      else col.lerpColors(C_GOLDB, C_BONE, clamp((ST.core - z) / 6, 0, 1)); // weighted
+      // colour: grey while unknown → type colour once classified → brighten post-core
+      const typeCol = TYPE_COLORS[pk.type];
+      if (z > ORDER_IN) {
+        col.copy(C_GRAY);
+      } else if (z > ST.core) {
+        col.lerpColors(
+          C_GRAY,
+          typeCol,
+          clamp((ORDER_IN - z) / (ORDER_IN - ORDER_OUT), 0, 1)
+        );
+      } else {
+        col.copy(typeCol).lerp(C_BONE, 0.4);
+      }
 
       const scale = 0.42 * ss(0, 0.04, pk.t) * (1 - ss(0.96, 1, pk.t));
       dummy.position.set(x, y, z);
