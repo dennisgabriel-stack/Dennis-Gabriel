@@ -140,6 +140,72 @@ function Structure({
   return <primitive object={built.root} />;
 }
 
+function Atmosphere({ progressRef }: { progressRef: MutableRefObject<number> }) {
+  const stars = useRef<THREE.Points>(null);
+  const ring = useRef<THREE.Group>(null);
+
+  const built = useMemo(() => {
+    // wide starfield to fill the full-screen canvas
+    const SN = 900;
+    const pos = new Float32Array(SN * 3);
+    for (let i = 0; i < SN; i++) {
+      const r = 6 + Math.random() * 22;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+      pos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th) * 0.8;
+      pos[i * 3 + 2] = r * Math.cos(ph);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+
+    // faint concentric blueprint rings drifting in the back
+    const rings = new THREE.Group();
+    for (let i = 0; i < 4; i++) {
+      const tor = new THREE.Mesh(
+        new THREE.TorusGeometry(7 + i * 3, 0.015, 8, 96),
+        new THREE.MeshBasicMaterial({
+          color: 0xc9a86a,
+          transparent: true,
+          opacity: 0.06,
+        })
+      );
+      tor.rotation.x = Math.PI / 2.2 + i * 0.1;
+      tor.position.z = -6 - i * 2;
+      rings.add(tor);
+    }
+    return { geo, rings };
+  }, []);
+
+  useFrame((state, delta) => {
+    const p = progressRef.current ?? 0;
+    if (stars.current) {
+      stars.current.rotation.y += delta * 0.02;
+      (stars.current.material as THREE.PointsMaterial).opacity = 0.35 + p * 0.4;
+    }
+    if (ring.current) {
+      ring.current.rotation.z += delta * 0.04;
+      ring.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.05) * 0.1;
+    }
+  });
+
+  return (
+    <>
+      <points ref={stars} geometry={built.geo}>
+        <pointsMaterial
+          size={0.05}
+          color={0xc9a86a}
+          transparent
+          opacity={0.4}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+      <primitive ref={ring} object={built.rings} />
+    </>
+  );
+}
+
 export default function ArchitectureCube({
   progressRef,
 }: {
@@ -152,6 +218,8 @@ export default function ArchitectureCube({
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
     >
+      <fog attach="fog" args={[0x0a0a0b, 14, 40]} />
+      <Atmosphere progressRef={progressRef} />
       <Structure progressRef={progressRef} />
     </Canvas>
   );

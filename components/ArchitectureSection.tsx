@@ -101,6 +101,25 @@ export default function ArchitectureSection() {
   return (
     <section ref={ref} className="relative h-[250vh] w-full">
       <div className="sticky top-0 flex h-[100svh] w-full items-center overflow-hidden">
+        {/* animated gold aurora filling the background */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <div
+            className="absolute left-1/3 top-1/4 h-80 w-80 rounded-full blur-[130px]"
+            style={{
+              background: "#c9a86a",
+              opacity: 0.1,
+              animation: "aurora1 22s ease-in-out infinite",
+            }}
+          />
+          <div
+            className="absolute bottom-1/4 right-1/3 h-96 w-96 rounded-full blur-[150px]"
+            style={{
+              background: "#9c8552",
+              opacity: 0.1,
+              animation: "aurora2 28s ease-in-out infinite",
+            }}
+          />
+        </div>
         {/* rotating cube structure */}
         <div className="absolute inset-0 z-0">
           <ArchitectureCube progressRef={progress} />
