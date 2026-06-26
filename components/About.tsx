@@ -73,7 +73,7 @@ export default function About() {
         {/* text fades in as you keep scrolling */}
         <motion.div
           style={{ opacity: textOpacity, y: textY }}
-          className="relative z-10 mr-auto max-w-xl px-6 md:px-10"
+          className="relative z-10 mr-auto max-w-xl px-6 md:px-10 md:pl-[8vw]"
         >
           <p className="mb-6 text-xs uppercase tracking-[0.4em] text-gold">
             Über mich
