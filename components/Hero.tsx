@@ -35,7 +35,7 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          className="scale-110 object-cover object-[12%_52%] opacity-80 md:scale-[1.45] md:object-contain md:object-[78%_top] md:opacity-80"
+          className="scale-110 object-cover object-[12%_52%] opacity-80 md:scale-[1.45] md:object-contain md:object-[62%_10%] md:opacity-80"
         />
       </motion.div>
 
