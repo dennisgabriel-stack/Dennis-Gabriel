@@ -45,12 +45,9 @@ export default function Nav() {
           href="#top"
           onClick={(e) => go(e, "#top")}
           aria-label="ARCHANGEL — zum Seitenanfang"
-          className="group flex items-center gap-2.5 text-bone transition-[filter] duration-300 hover:[filter:drop-shadow(0_0_10px_rgba(201,168,106,0.55))]"
+          className="flex items-center"
         >
-          <Logo className="h-9 w-9" />
-          <span className="hidden font-display text-sm font-bold tracking-[0.3em] text-bone sm:inline">
-            ARCHANGEL<span className="text-gold">//</span>DEV
-          </span>
+          <Logo className="h-12 md:h-14" />
         </a>
         <ul className="hidden items-center gap-9 md:flex">
           {links.map((l) => (
