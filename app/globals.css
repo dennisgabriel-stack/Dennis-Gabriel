@@ -99,3 +99,16 @@ body {
     background-position: -200% center;
   }
 }
+
+/* rotary dial HUD rings */
+.dial-spin {
+  animation: dial-rot 24s linear infinite;
+}
+.dial-spin-rev {
+  animation: dial-rot 36s linear infinite reverse;
+}
+@keyframes dial-rot {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -52,10 +52,16 @@ const norm = (a: number) => {
   return d;
 };
 
-export default function LayerDial() {
+export default function LayerDial({
+  onSelect,
+}: {
+  onSelect?: (i: number) => void;
+}) {
   const [selected, setSelected] = useState(0);
   const knobRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
   const layer = LAYERS[selected];
 
   const s = useRef({
@@ -134,6 +140,7 @@ export default function LayerDial() {
         st.settled = false;
         emit("ux-tick");
         setSelected(det);
+        onSelectRef.current?.(det);
       }
 
       knob.style.transform = `rotate(${st.angle}deg)`;
@@ -157,6 +164,62 @@ export default function LayerDial() {
         className="relative h-[300px] w-[300px] shrink-0 cursor-grab touch-none select-none active:cursor-grabbing md:h-[360px] md:w-[360px]"
         style={{ filter: `drop-shadow(0 0 40px ${layer.accent}33)` }}
       >
+        {/* futuristic HUD rings */}
+        <svg
+          viewBox="0 0 360 360"
+          className="pointer-events-none absolute inset-0 h-full w-full"
+        >
+          <circle
+            cx="180"
+            cy="180"
+            r="150"
+            fill="none"
+            stroke={`${layer.accent}22`}
+            strokeWidth="10"
+            strokeDasharray="1 13"
+          />
+          <circle
+            cx="180"
+            cy="180"
+            r="138"
+            fill="none"
+            stroke={`${layer.accent}33`}
+            strokeWidth="1"
+            strokeDasharray="5 11"
+            className="dial-spin"
+            style={{ transformOrigin: "180px 180px" }}
+          />
+          <circle
+            cx="180"
+            cy="180"
+            r="120"
+            fill="none"
+            stroke={`${layer.accent}22`}
+            strokeWidth="1"
+            strokeDasharray="2 6"
+            className="dial-spin-rev"
+            style={{ transformOrigin: "180px 180px" }}
+          />
+          {/* active quadrant arc */}
+          <circle
+            cx="180"
+            cy="180"
+            r="150"
+            fill="none"
+            stroke={layer.accent}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray="235 707"
+            style={{
+              transform: `rotate(${-135 + selected * 90}deg)`,
+              transformOrigin: "180px 180px",
+              transition:
+                "transform 0.55s cubic-bezier(0.16,1,0.3,1), stroke 0.5s",
+              filter: `drop-shadow(0 0 6px ${layer.accent})`,
+            }}
+          />
+        </svg>
+
         {/* outer fixed ticks L1-L4 (top/right/bottom/left) */}
         {LAYERS.map((l, i) => {
           const a = i * 90; // 0 top, 90 right, 180 bottom, 270 left
