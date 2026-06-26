@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   motion,
+  animate,
+  useInView,
   useScroll,
   useTransform,
   useMotionValueEvent,
@@ -15,6 +17,67 @@ const AmbientParticles = dynamic(
   () => import("./three/AmbientParticles"),
   { ssr: false }
 );
+
+type Stat = { to?: number; suffix?: string; inf?: boolean; l: string };
+const STATS: Stat[] = [
+  { to: 18, l: "Verifizierte Zertifikate" },
+  { to: 8, suffix: "+", l: "Sprachen (i18n)" },
+  { to: 3, l: "Verschiedene LLMs" },
+  { inf: true, l: "Design-Möglichkeiten" },
+];
+
+function StatItem({ stat, index }: { stat: Stat; index: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.6 });
+  const [val, setVal] = useState(0);
+  const delay = index * 0.12;
+
+  useEffect(() => {
+    if (!inView || stat.to === undefined) return;
+    const controls = animate(0, stat.to, {
+      duration: 1.2,
+      delay,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (v) => setVal(Math.round(v)),
+    });
+    return () => controls.stop();
+  }, [inView, stat.to, delay]);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 18 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="font-display text-3xl font-bold text-bone md:text-4xl">
+        {stat.inf ? (
+          <motion.span
+            className="inline-block"
+            animate={{ scale: [1, 1.18, 1] }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+          >
+            ∞
+          </motion.span>
+        ) : (
+          <>
+            {val}
+            {stat.suffix}
+          </>
+        )}
+      </div>
+      <motion.div
+        className="mt-2 h-px origin-left bg-gradient-to-r from-gold to-transparent"
+        initial={{ scaleX: 0 }}
+        animate={inView ? { scaleX: 1 } : {}}
+        transition={{ duration: 0.7, delay: delay + 0.2, ease: [0.16, 1, 0.3, 1] }}
+      />
+      <div className="mt-2 text-xs uppercase tracking-wider text-muted">
+        {stat.l}
+      </div>
+    </motion.div>
+  );
+}
 
 export default function About() {
   const ref = useRef<HTMLDivElement>(null);
@@ -161,20 +224,8 @@ export default function About() {
           </p>
 
           <div className="mt-6 grid grid-cols-2 gap-4 border-t border-bone/10 pt-5 md:mt-8 md:gap-5 md:pt-6 md:grid-cols-4">
-            {[
-              { n: "18", l: "Verifizierte Zertifikate" },
-              { n: "8+", l: "Sprachen (i18n)" },
-              { n: "4", l: "Sicherheits-Stufen" },
-              { n: "∞", l: "Design-Möglichkeiten" },
-            ].map((s) => (
-              <div key={s.l}>
-                <div className="font-display text-3xl font-bold text-bone md:text-4xl">
-                  {s.n}
-                </div>
-                <div className="mt-1 text-xs uppercase tracking-wider text-muted">
-                  {s.l}
-                </div>
-              </div>
+            {STATS.map((s, i) => (
+              <StatItem key={s.l} stat={s} index={i} />
             ))}
           </div>
         </motion.div>
