@@ -149,7 +149,7 @@ export default function TechCubesSection() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
 
         {/* construct builder — 4 icons symbolising what each one builds */}
-        <div className="pointer-events-none absolute inset-x-0 top-5 z-30 flex flex-col items-center gap-2 px-4">
+        <div className="pointer-events-none absolute inset-x-0 top-28 z-30 flex flex-col items-center gap-2 px-4 md:top-16">
           <p className="text-[10px] uppercase tracking-[0.35em] text-muted">
             Konstrukt bauen
           </p>
