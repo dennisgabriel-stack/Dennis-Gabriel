@@ -1,43 +1,48 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 const { lerp } = THREE.MathUtils;
 
-type Tech = { n: string; accent: string };
+export type Tech = {
+  n: string;
+  accent: string;
+  desc: string;
+  url: string;
+};
 
 // complete current stack, grouped by domain (accent per group)
-const TECHS: Tech[] = [
+export const TECHS: Tech[] = [
   // Frontend
-  { n: "Next.js", accent: "#e6c88a" },
-  { n: "React", accent: "#e6c88a" },
-  { n: "TypeScript", accent: "#e6c88a" },
-  { n: "Tailwind", accent: "#e6c88a" },
-  { n: "Three.js", accent: "#e6c88a" },
-  { n: "Framer Motion", accent: "#e6c88a" },
+  { n: "Next.js", accent: "#e6c88a", desc: "React-Framework für SSR, Routing & Top-Performance.", url: "https://nextjs.org" },
+  { n: "React", accent: "#e6c88a", desc: "Bibliothek für komponentenbasierte User Interfaces.", url: "https://react.dev" },
+  { n: "TypeScript", accent: "#e6c88a", desc: "Typsicheres JavaScript für robusten, skalierbaren Code.", url: "https://www.typescriptlang.org" },
+  { n: "Tailwind", accent: "#e6c88a", desc: "Utility-First CSS-Framework für schnelles UI-Design.", url: "https://tailwindcss.com" },
+  { n: "Three.js", accent: "#e6c88a", desc: "WebGL-Engine für 3D-Grafik im Browser.", url: "https://threejs.org" },
+  { n: "Framer Motion", accent: "#e6c88a", desc: "Deklarative, physik-basierte Animationen für React.", url: "https://www.framer.com/motion/" },
   // Backend
-  { n: "Node.js", accent: "#c9a86a" },
-  { n: "Express", accent: "#c9a86a" },
-  { n: "WebSocket", accent: "#c9a86a" },
-  { n: "GraphQL", accent: "#c9a86a" },
-  { n: "PostgreSQL", accent: "#c9a86a" },
-  { n: "Redis", accent: "#c9a86a" },
+  { n: "Node.js", accent: "#c9a86a", desc: "Event-getriebene JavaScript-Runtime fürs Backend.", url: "https://nodejs.org" },
+  { n: "Express", accent: "#c9a86a", desc: "Minimalistisches Web-Framework für Node.js.", url: "https://expressjs.com" },
+  { n: "WebSocket", accent: "#c9a86a", desc: "Bidirektionale Echtzeit-Verbindungen.", url: "https://developer.mozilla.org/docs/Web/API/WebSockets_API" },
+  { n: "GraphQL", accent: "#c9a86a", desc: "Typisierte Abfragesprache für flexible APIs.", url: "https://graphql.org" },
+  { n: "PostgreSQL", accent: "#c9a86a", desc: "Leistungsstarke relationale Datenbank.", url: "https://www.postgresql.org" },
+  { n: "Redis", accent: "#c9a86a", desc: "In-Memory-Store für Cache, Sessions & Pub/Sub.", url: "https://redis.io" },
   // Infra
-  { n: "Docker", accent: "#9c8552" },
-  { n: "CI/CD", accent: "#9c8552" },
-  { n: "AWS Cloud", accent: "#9c8552" },
-  { n: "Git", accent: "#9c8552" },
-  { n: "Linux", accent: "#9c8552" },
-  { n: "Monitoring", accent: "#9c8552" },
+  { n: "Docker", accent: "#9c8552", desc: "Container für reproduzierbare Deployments.", url: "https://www.docker.com" },
+  { n: "CI/CD", accent: "#9c8552", desc: "Automatisierte Builds, Tests & Deployments.", url: "https://github.com/features/actions" },
+  { n: "AWS Cloud", accent: "#9c8552", desc: "Skalierbare Cloud-Infrastruktur & Services.", url: "https://aws.amazon.com" },
+  { n: "Git", accent: "#9c8552", desc: "Verteilte Versionskontrolle für Code.", url: "https://git-scm.com" },
+  { n: "Linux", accent: "#9c8552", desc: "Open-Source-Betriebssystem für Server.", url: "https://www.linux.org" },
+  { n: "Monitoring", accent: "#9c8552", desc: "Metriken, Logs, Dashboards & Alerting.", url: "https://grafana.com" },
   // AI / Design / Web3
-  { n: "KI / LLM", accent: "#f5f4f0" },
-  { n: "Automation", accent: "#f5f4f0" },
-  { n: "Figma", accent: "#f5f4f0" },
-  { n: "UI / UX", accent: "#f5f4f0" },
-  { n: "Web3", accent: "#f5f4f0" },
-  { n: "Smart Contracts", accent: "#f5f4f0" },
+  { n: "KI / LLM", accent: "#f5f4f0", desc: "Große Sprachmodelle & KI-Integration in Produkte.", url: "https://www.anthropic.com" },
+  { n: "Automation", accent: "#f5f4f0", desc: "Workflow-Automatisierung & Integrationen.", url: "https://n8n.io" },
+  { n: "Figma", accent: "#f5f4f0", desc: "Kollaboratives Interface- & Prototyp-Design.", url: "https://www.figma.com" },
+  { n: "UI / UX", accent: "#f5f4f0", desc: "Nutzerzentriertes Design & Interaktion.", url: "https://www.interaction-design.org" },
+  { n: "Web3", accent: "#f5f4f0", desc: "Dezentrale Apps & Blockchain-Anbindung.", url: "https://ethereum.org" },
+  { n: "Smart Contracts", accent: "#f5f4f0", desc: "On-Chain-Programmlogik & Verträge.", url: "https://soliditylang.org" },
 ];
 
 const N = TECHS.length; // 24
@@ -136,47 +141,50 @@ const FORM_TARGETS = FORMATIONS.map((f) =>
 );
 const HOLD = 5; // seconds per formation
 
-function Blocks() {
+function Blocks({
+  focused,
+  setFocused,
+}: {
+  focused: number | null;
+  setFocused: (i: number | null) => void;
+}) {
   const groupRef = useRef<THREE.Group>(null);
-  const { pointer } = useThree();
+  const { pointer, camera } = useThree();
+  const lastForm = useRef(-1);
 
   const blocks = useMemo(() => {
     const arr: {
       mesh: THREE.Group;
       seed: number;
+      mats: (THREE.MeshBasicMaterial | THREE.LineBasicMaterial)[];
+      baseOpacity: number[];
     }[] = [];
     const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
     const edgeGeo = new THREE.EdgesGeometry(geo);
     const glowGeo = new THREE.BoxGeometry(1.42, 1.42, 1.42);
     TECHS.forEach((tech) => {
-      const tex = makeLabel(tech);
-      const mat = new THREE.MeshBasicMaterial({ map: tex });
+      const mat = new THREE.MeshBasicMaterial({
+        map: makeLabel(tech),
+        transparent: true,
+      });
       const cube = new THREE.Mesh(geo, mat);
-      const edges = new THREE.LineSegments(
-        edgeGeo,
-        new THREE.LineBasicMaterial({
-          color: tech.accent,
-          transparent: true,
-          opacity: 0.85,
-          blending: THREE.AdditiveBlending,
-        })
-      );
-      // soft accent glow shell
-      const glow = new THREE.Mesh(
-        glowGeo,
-        new THREE.MeshBasicMaterial({
-          color: tech.accent,
-          transparent: true,
-          opacity: 0.06,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-        })
-      );
+      const edgeMat = new THREE.LineBasicMaterial({
+        color: tech.accent,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+      });
+      const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: tech.accent,
+        transparent: true,
+        opacity: 0.06,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const glow = new THREE.Mesh(glowGeo, glowMat);
       const holder = new THREE.Group();
-      holder.add(cube);
-      holder.add(edges);
-      holder.add(glow);
-      // scattered start
+      holder.add(cube, edges, glow);
       holder.position.set(
         (Math.random() - 0.5) * 24,
         (Math.random() - 0.5) * 16,
@@ -187,38 +195,76 @@ function Blocks() {
         Math.random() * Math.PI,
         Math.random() * Math.PI
       );
-      arr.push({ mesh: holder, seed: Math.random() * 100 });
+      arr.push({
+        mesh: holder,
+        seed: Math.random() * 100,
+        mats: [mat, edgeMat, glowMat],
+        baseOpacity: [1, 0.85, 0.06],
+      });
     });
     return arr;
   }, []);
 
+  const tmp = useMemo(() => new THREE.Vector3(), []);
+
   useFrame((state, delta) => {
     const t = state.clock.elapsedTime;
+    const k = 1 - Math.pow(0.001, delta);
+    const focusing = focused !== null;
+
+    // formation changes → authentic movement sound
     const fIndex = Math.floor(t / HOLD) % FORMATIONS.length;
+    if (!focusing && fIndex !== lastForm.current) {
+      lastForm.current = fIndex;
+      if (typeof window !== "undefined")
+        window.dispatchEvent(new CustomEvent("ux-woosh"));
+    }
     const targets = FORM_TARGETS[fIndex];
-    const k = 1 - Math.pow(0.001, delta); // frame-rate independent lerp
+
+    // position in front of the camera for the focused cube
+    const front = tmp
+      .copy(camera.position)
+      .add(
+        new THREE.Vector3(0, 0, -6.5).applyQuaternion(camera.quaternion)
+      );
 
     blocks.forEach((b, i) => {
-      const target = targets[i];
-      b.mesh.position.lerp(target, k * 0.9);
-      // settle straight, with a gentle idle float
-      b.mesh.rotation.x = lerp(b.mesh.rotation.x, Math.sin(t + b.seed) * 0.05, k);
-      b.mesh.rotation.y = lerp(b.mesh.rotation.y, Math.cos(t * 0.8 + b.seed) * 0.05, k);
-      b.mesh.rotation.z = lerp(b.mesh.rotation.z, 0, k);
-      const floatY = Math.sin(t * 1.2 + b.seed) * 0.06;
-      b.mesh.position.y += floatY * delta * 4;
+      if (focusing && i === focused) {
+        // fly to the camera, grow, face viewer, slow spin
+        b.mesh.position.lerp(b.mesh.parent!.worldToLocal(front.clone()), 0.12);
+        b.mesh.scale.setScalar(lerp(b.mesh.scale.x, 2.6, 0.1));
+        b.mesh.rotation.x = lerp(b.mesh.rotation.x, 0, 0.1);
+        b.mesh.rotation.z = lerp(b.mesh.rotation.z, 0, 0.1);
+        b.mesh.rotation.y += delta * 0.6;
+        b.mats.forEach((m, j) => (m.opacity = b.baseOpacity[j]));
+      } else {
+        const target = targets[i];
+        b.mesh.position.lerp(target, k * 0.9);
+        b.mesh.scale.setScalar(lerp(b.mesh.scale.x, 1, 0.1));
+        b.mesh.rotation.x = lerp(b.mesh.rotation.x, Math.sin(t + b.seed) * 0.05, k);
+        b.mesh.rotation.y = lerp(b.mesh.rotation.y, Math.cos(t * 0.8 + b.seed) * 0.05, k);
+        b.mesh.rotation.z = lerp(b.mesh.rotation.z, 0, k);
+        b.mesh.position.y += Math.sin(t * 1.2 + b.seed) * 0.06 * delta * 4;
+        // dim others while one is focused
+        const dimTo = focusing ? 0.12 : 1;
+        b.mats.forEach(
+          (m, j) =>
+            (m.opacity = lerp(m.opacity, b.baseOpacity[j] * dimTo, 0.1))
+        );
+      }
     });
 
     if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.16;
+      const spin = focusing ? 0 : delta * 0.16;
+      groupRef.current.rotation.y += spin;
       groupRef.current.rotation.x = lerp(
         groupRef.current.rotation.x,
-        -pointer.y * 0.25,
+        focusing ? 0 : -pointer.y * 0.25,
         0.04
       );
       groupRef.current.position.x = lerp(
         groupRef.current.position.x,
-        pointer.x * 1.2,
+        focusing ? 0 : pointer.x * 1.2,
         0.04
       );
     }
@@ -227,7 +273,16 @@ function Blocks() {
   return (
     <group ref={groupRef}>
       {blocks.map((b, i) => (
-        <primitive key={i} object={b.mesh} />
+        <primitive
+          key={i}
+          object={b.mesh}
+          onClick={(e: { stopPropagation: () => void }) => {
+            e.stopPropagation();
+            setFocused(focused === i ? null : i);
+            if (typeof window !== "undefined")
+              window.dispatchEvent(new CustomEvent("ux-click"));
+          }}
+        />
       ))}
     </group>
   );
@@ -284,17 +339,37 @@ function Ambience() {
   );
 }
 
-export default function TechCubes() {
+export default function TechCubes({
+  onFocus,
+}: {
+  onFocus?: (t: Tech | null) => void;
+}) {
+  const [focused, setFocusedState] = useState<number | null>(null);
+
+  const setFocused = (i: number | null) => {
+    setFocusedState(i);
+    onFocus?.(i === null ? null : TECHS[i]);
+  };
+
+  // allow the HTML card's close button to clear focus
+  useEffect(() => {
+    const clear = () => setFocused(null);
+    window.addEventListener("tech-unfocus", clear);
+    return () => window.removeEventListener("tech-unfocus", clear);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Canvas
       className="!absolute inset-0"
       camera={{ position: [0, 1.5, 16], fov: 48 }}
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+      onPointerMissed={() => setFocused(null)}
     >
       <fog attach="fog" args={[0x0a0a0b, 16, 42]} />
       <Ambience />
-      <Blocks />
+      <Blocks focused={focused} setFocused={setFocused} />
     </Canvas>
   );
 }

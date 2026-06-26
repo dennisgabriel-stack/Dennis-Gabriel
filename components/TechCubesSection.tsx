@@ -2,11 +2,16 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Reveal from "./Reveal";
+import type { Tech } from "./three/TechCubes";
 
 const TechCubes = dynamic(() => import("./three/TechCubes"), { ssr: false });
 
 export default function TechCubesSection() {
+  const [tech, setTech] = useState<Tech | null>(null);
+
   return (
     <section
       id="stack-3d"
@@ -75,9 +80,66 @@ export default function TechCubesSection() {
             }}
           />
         </div>
-        <TechCubes />
+        <TechCubes onFocus={setTech} />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-ink to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
+
+        {/* tech detail card on cube tap */}
+        <AnimatePresence>
+          {tech && (
+            <motion.div
+              key={tech.n}
+              initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="glass absolute bottom-8 left-1/2 z-20 w-[88%] max-w-sm -translate-x-1/2 overflow-hidden rounded-2xl p-6"
+              style={{
+                boxShadow: `0 0 50px ${tech.accent}33`,
+                border: `1px solid ${tech.accent}40`,
+              }}
+            >
+              <div
+                className="absolute inset-x-0 top-0 h-[3px]"
+                style={{
+                  background: `linear-gradient(90deg, transparent, ${tech.accent}, transparent)`,
+                }}
+              />
+              <button
+                onClick={() => {
+                  setTech(null);
+                  window.dispatchEvent(new CustomEvent("tech-unfocus"));
+                }}
+                aria-label="Schließen"
+                className="absolute right-4 top-4 text-muted transition-colors hover:text-bone"
+              >
+                ✕
+              </button>
+              <p
+                className="text-[10px] uppercase tracking-[0.3em]"
+                style={{ color: tech.accent }}
+              >
+                Tech-Stack
+              </p>
+              <h4 className="mt-2 font-display text-2xl font-bold text-bone">
+                {tech.n}
+              </h4>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                {tech.desc}
+              </p>
+              <a
+                href={tech.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-5 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-medium uppercase tracking-[0.18em] text-ink transition-transform duration-300 hover:scale-105"
+                style={{ background: tech.accent }}
+              >
+                Zur Website
+                <span aria-hidden>↗</span>
+              </a>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );
