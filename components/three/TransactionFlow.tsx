@@ -410,8 +410,36 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     debrisMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     group.add(debrisMesh);
 
+    // ===== ambient starfield backdrop (matches the About section above so
+    // the section seam dissolves seamlessly) — follows the camera each frame =====
+    const SN = 700;
+    const spos = new Float32Array(SN * 3);
+    for (let i = 0; i < SN; i++) {
+      const r = 8 + Math.random() * 26;
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      spos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+      spos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th) * 0.85;
+      spos[i * 3 + 2] = r * Math.cos(ph);
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute("position", new THREE.BufferAttribute(spos, 3));
+    const stars = new THREE.Points(
+      starGeo,
+      new THREE.PointsMaterial({
+        size: 0.05,
+        color: 0xc9a86a,
+        transparent: true,
+        opacity: 0.5,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    stars.frustumCulled = false;
+
     return {
       group,
+      stars,
       spin,
       pulse,
       focus,
@@ -441,6 +469,11 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     // spinners + pulses
     b.spin.forEach((s) => (s.o.rotation[s.ax] += dt * s.sp));
     b.pulse.forEach((q) => q.o.scale.setScalar(1 + Math.sin(t * 2.4 + q.ph) * 0.18));
+
+    // starfield drifts with the camera so the backdrop is always present
+    b.stars.position.copy(cam.position);
+    b.stars.rotation.y += dt * 0.02;
+    b.stars.rotation.x = Math.sin(t * 0.05) * 0.08;
 
     // focus-dim: only the current section stays bright
     b.focus.forEach((f) => {
@@ -610,7 +643,12 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     );
   });
 
-  return <primitive object={built.group} />;
+  return (
+    <>
+      <primitive object={built.stars} />
+      <primitive object={built.group} />
+    </>
+  );
 }
 
 export default function TransactionFlow({

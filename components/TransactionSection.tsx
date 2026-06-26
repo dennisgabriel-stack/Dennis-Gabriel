@@ -114,6 +114,27 @@ export default function TransactionSection() {
   return (
     <section id="onchain" ref={ref} className="relative h-[460vh] w-full">
       <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
+        {/* continuous animated background (matches the About section above so
+            the seam between the two sections dissolves seamlessly) */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          <div
+            className="absolute left-1/3 top-1/4 h-80 w-80 rounded-full blur-[140px]"
+            style={{
+              background: "#c9a86a",
+              opacity: 0.1,
+              animation: "aurora1 24s ease-in-out infinite",
+            }}
+          />
+          <div
+            className="absolute bottom-1/4 right-1/3 h-96 w-96 rounded-full blur-[150px]"
+            style={{
+              background: "#9c8552",
+              opacity: 0.1,
+              animation: "aurora2 30s ease-in-out infinite",
+            }}
+          />
+        </div>
+
         {/* 3D orchestration pipeline */}
         <div className="absolute inset-0 z-0">
           <TransactionFlow progressRef={progress} />
