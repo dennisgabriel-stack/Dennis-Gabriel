@@ -75,10 +75,13 @@ export default function LayerDial({
     cx: 0,
     cy: 0,
     target: null as number | null,
+    nextAuto: 0,
   });
 
+  const AUTO_MS = 4500; // dwell on each layer before auto-advancing one step
+
   // rotate the wheel to a chosen layer (click-to-select), shortest path
-  const goTo = (i: number) => {
+  const goTo = (i: number, silent = false) => {
     const st = s.current;
     const k0 = Math.round(st.angle / 90);
     let d = ((i - (((k0 % 4) + 4) % 4)) + 4) % 4;
@@ -86,7 +89,7 @@ export default function LayerDial({
     st.target = (k0 + d) * 90;
     st.vel = 0;
     st.dragging = false;
-    emit("ux-woosh");
+    if (!silent) emit("ux-woosh");
   };
 
   useEffect(() => {
@@ -104,6 +107,7 @@ export default function LayerDial({
       st.dragging = true;
       st.vel = 0;
       st.target = null;
+      st.nextAuto = Infinity; // pause auto-rotate while the user interacts
       st.lastPointer = angleAt(e.clientX, e.clientY);
       st.lastMove = performance.now();
       wrap.setPointerCapture?.(e.pointerId);
@@ -129,10 +133,26 @@ export default function LayerDial({
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
 
+    st.nextAuto = performance.now() + AUTO_MS;
+
     let raf = 0;
     const frame = () => {
+      const now = performance.now();
+      // auto-advance one detent when idle and the dwell time has elapsed
+      if (
+        !st.dragging &&
+        st.target === null &&
+        st.settled &&
+        Math.abs(st.vel) < 0.3 &&
+        now >= st.nextAuto
+      ) {
+        const k = (((Math.round(st.angle / 90) % 4) + 4) % 4);
+        st.nextAuto = Infinity; // re-armed once it settles on the new layer
+        goTo((k + 1) % 4, true); // silent auto-step (detent tick still plays)
+      }
+
       if (st.dragging) {
-        if (performance.now() - st.lastMove > 90) st.vel = 0;
+        if (now - st.lastMove > 90) st.vel = 0;
       } else if (st.target !== null) {
         // animate to a clicked layer
         st.angle += (st.target - st.angle) * 0.16;
@@ -141,6 +161,7 @@ export default function LayerDial({
           st.target = null;
           if (!st.settled) {
             st.settled = true;
+            st.nextAuto = now + AUTO_MS;
             emit("ux-textin");
           }
         }
@@ -153,6 +174,7 @@ export default function LayerDial({
         if (Math.abs(target - st.angle) < 0.2 && !st.settled) {
           st.angle = target;
           st.settled = true;
+          st.nextAuto = now + AUTO_MS;
           emit("ux-textin"); // card locks in
         }
       }
