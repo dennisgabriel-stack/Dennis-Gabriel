@@ -15,13 +15,13 @@ export default function TechCubesSection() {
       <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
         {/* portrait sized to the text block (matches sketched area), soft on all sides */}
         <div className="relative">
-          <div className="pointer-events-none absolute -inset-y-6 -left-6 -right-6 z-0 md:left-auto md:w-[72%]">
+          <div className="pointer-events-none absolute -inset-y-6 left-0 z-0 w-[62%] md:left-auto md:right-0 md:w-[72%]">
             <Image
               src="/images/stack-bg.jpeg"
               alt=""
               fill
               sizes="100vw"
-              className="object-cover object-[center_28%] opacity-55"
+              className="object-cover object-[72%_28%] opacity-55"
               priority={false}
             />
             {/* fade toward the text on the left */}
