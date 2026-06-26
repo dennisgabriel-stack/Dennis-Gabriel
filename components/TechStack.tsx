@@ -17,22 +17,23 @@ export default function TechStack() {
   const [sel, setSel] = useState(0);
   const ref = useRef<HTMLElement>(null);
 
-  // emerge-from-depth: as you fly through the construct wall above, this
-  // section rushes forward from small → full, so it reads as the space behind
+  // emerge-from-depth: this section is pulled up BEHIND the on-chain frame
+  // (see -mt below). As that frame dissolves, this scales forward from small →
+  // full, so it reads as the room behind the construct you flew through.
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start end", "start 28%"],
+    offset: ["start end", "start start"],
   });
-  const depthScale = useTransform(scrollYProgress, [0, 1], [0.78, 1]);
-  const depthOpacity = useTransform(scrollYProgress, [0, 0.55], [0, 1]);
-  const depthBlur = useTransform(scrollYProgress, [0, 0.6], [10, 0]);
+  const depthScale = useTransform(scrollYProgress, [0.1, 0.92], [0.7, 1]);
+  const depthOpacity = useTransform(scrollYProgress, [0.1, 0.7], [0, 1]);
+  const depthBlur = useTransform(scrollYProgress, [0.1, 0.8], [12, 0]);
   const depthFilter = useTransform(depthBlur, (b) => `blur(${b}px)`);
 
   return (
     <section
       id="stack"
       ref={ref}
-      className="relative w-full overflow-hidden py-28 transition-colors duration-700 md:py-40"
+      className="relative z-10 -mt-[100svh] w-full overflow-hidden py-28 transition-colors duration-700 md:py-40"
     >
       {/* layer-reactive colour wash */}
       <div

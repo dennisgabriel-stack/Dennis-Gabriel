@@ -7,7 +7,6 @@ import {
   useScroll,
   useTransform,
   useMotionValueEvent,
-  useMotionTemplate,
   type MotionValue,
 } from "framer-motion";
 
@@ -99,12 +98,11 @@ export default function TransactionSection() {
     target: ref,
     offset: ["start start", "end end"],
   });
-  // as the camera punches through the settlement wall, dissolve the scene so
-  // the next section reads as the space behind the construct
-  const flyOpacity = useTransform(scrollYProgress, [0.93, 1], [1, 0]);
-  const flyBlur = useTransform(scrollYProgress, [0.93, 1], [0, 8]);
-  const flyScale = useTransform(scrollYProgress, [0.93, 1], [1, 1.06]);
-  const flyFilter = useMotionTemplate`blur(${flyBlur}px)`;
+  // as the camera punches through the settlement wall, dissolve the WHOLE
+  // on-chain frame so the TechStack section (overlapped behind it) is revealed
+  // in place — reading as the room behind the construct, not a scroll-up
+  const flyOpacity = useTransform(scrollYProgress, [0.8, 0.95], [1, 0]);
+  const flyScale = useTransform(scrollYProgress, [0.8, 1], [1, 1.12]);
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     progress.current = v;
@@ -120,8 +118,12 @@ export default function TransactionSection() {
   });
 
   return (
-    <section id="onchain" ref={ref} className="relative h-[460vh] w-full">
+    <section id="onchain" ref={ref} className="relative z-20 h-[460vh] w-full">
       <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
+       <motion.div
+         style={{ opacity: flyOpacity, scale: flyScale }}
+         className="absolute inset-0 origin-center"
+       >
         {/* continuous animated background (matches the About section above so
             the seam between the two sections dissolves seamlessly) */}
         <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
@@ -144,12 +146,9 @@ export default function TransactionSection() {
         </div>
 
         {/* 3D orchestration pipeline */}
-        <motion.div
-          style={{ opacity: flyOpacity, filter: flyFilter, scale: flyScale }}
-          className="absolute inset-0 z-0"
-        >
+        <div className="absolute inset-0 z-0">
           <TransactionFlow progressRef={progress} />
-        </motion.div>
+        </div>
 
         {/* cinematic depth overlays */}
         <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_45%,#0a0a0b_95%)]" />
@@ -178,6 +177,7 @@ export default function TransactionSection() {
             ))}
           </div>
         </div>
+       </motion.div>
       </div>
     </section>
   );
