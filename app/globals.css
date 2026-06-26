@@ -113,6 +113,36 @@ body {
   }
 }
 
+/* tumbling wireframe cube for the section transition */
+.cube-perspective {
+  perspective: 700px;
+}
+.cube3d {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  transform-style: preserve-3d;
+  animation: cube-tumble 3.5s linear infinite;
+}
+.cube3d > i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #c9a86a;
+  background: rgba(201, 168, 106, 0.05);
+  box-shadow: inset 0 0 14px rgba(201, 168, 106, 0.25);
+}
+.cube3d .cf1 { transform: translateZ(42px); }
+.cube3d .cf2 { transform: rotateY(180deg) translateZ(42px); }
+.cube3d .cf3 { transform: rotateY(90deg) translateZ(42px); }
+.cube3d .cf4 { transform: rotateY(-90deg) translateZ(42px); }
+.cube3d .cf5 { transform: rotateX(90deg) translateZ(42px); }
+.cube3d .cf6 { transform: rotateX(-90deg) translateZ(42px); }
+@keyframes cube-tumble {
+  to {
+    transform: rotateX(360deg) rotateY(360deg);
+  }
+}
+
 /* drifting aurora blobs */
 @keyframes aurora1 {
   0% {

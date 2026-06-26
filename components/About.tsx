@@ -3,7 +3,7 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 
 const AmbientParticles = dynamic(
   () => import("./three/AmbientParticles"),
@@ -17,12 +17,40 @@ export default function About() {
     offset: ["start start", "end end"],
   });
 
-  // first only the man is visible, then the text fades in on scroll
-  const textOpacity = useTransform(scrollYProgress, [0.02, 0.12], [0, 1]);
+  // text fades in early, then dissolves to the LEFT at the section exit
+  const textOpacity = useTransform(
+    scrollYProgress,
+    [0.02, 0.12, 0.82, 0.95],
+    [0, 1, 1, 0]
+  );
   const textY = useTransform(scrollYProgress, [0.02, 0.14], [50, 0]);
-  // the portrait recedes slightly as the text takes over
-  const imgOpacity = useTransform(scrollYProgress, [0.1, 0.5], [0.85, 0.5]);
+  const textX = useTransform(scrollYProgress, [0.82, 0.96], [0, -280]);
+  // the man dissolves to the RIGHT at the section exit
+  const imgOpacity = useTransform(
+    scrollYProgress,
+    [0.1, 0.5, 0.82, 0.96],
+    [0.85, 0.55, 0.55, 0]
+  );
+  const imgX = useTransform(scrollYProgress, [0.82, 0.97], [0, 320]);
   const imgScale = useTransform(scrollYProgress, [0, 0.6], [1.12, 1]);
+  // a small cube falls from top → out of the screen during the exit
+  const cubeY = useTransform(scrollYProgress, [0.78, 1], ["-25vh", "120vh"]);
+  const cubeOpacity = useTransform(
+    scrollYProgress,
+    [0.78, 0.85, 0.97, 1],
+    [0, 1, 1, 0]
+  );
+
+  // sound when the exit transition begins
+  const fired = useRef(false);
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    if (v > 0.8 && !fired.current) {
+      fired.current = true;
+      if (typeof window !== "undefined")
+        window.dispatchEvent(new CustomEvent("ux-woosh"));
+    }
+    if (v < 0.78) fired.current = false;
+  });
 
   return (
     <section id="about" ref={ref} className="relative h-[220vh] w-full">
@@ -50,9 +78,9 @@ export default function About() {
           <AmbientParticles />
         </div>
 
-        {/* cinematic portrait — seen first */}
+        {/* cinematic portrait — seen first, dissolves right on exit */}
         <motion.div
-          style={{ opacity: imgOpacity }}
+          style={{ opacity: imgOpacity, x: imgX }}
           className="pointer-events-none absolute inset-0 z-[1]"
         >
           <motion.div style={{ scale: imgScale }} className="absolute inset-0">
@@ -70,9 +98,26 @@ export default function About() {
           <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-ink to-transparent" />
         </motion.div>
 
-        {/* text fades in as you keep scrolling */}
+        {/* falling cube during the section exit */}
         <motion.div
-          style={{ opacity: textOpacity, y: textY }}
+          style={{ y: cubeY, opacity: cubeOpacity }}
+          className="pointer-events-none absolute left-1/2 top-0 z-40 -translate-x-1/2"
+        >
+          <div className="cube-perspective">
+            <div className="cube3d">
+              <i className="cf1" />
+              <i className="cf2" />
+              <i className="cf3" />
+              <i className="cf4" />
+              <i className="cf5" />
+              <i className="cf6" />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* text fades in as you keep scrolling, dissolves left on exit */}
+        <motion.div
+          style={{ opacity: textOpacity, y: textY, x: textX }}
           className="relative z-10 mr-auto max-w-xl px-6 md:px-10 md:pl-[8vw]"
         >
           <p className="mb-6 text-xs uppercase tracking-[0.4em] text-gold">
