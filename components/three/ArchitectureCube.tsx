@@ -159,19 +159,19 @@ function Atmosphere({ progressRef }: { progressRef: MutableRefObject<number> }) 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
 
-    // faint concentric blueprint rings drifting in the back
+    // orbital rings that encircle the cube (centred, larger than it)
     const rings = new THREE.Group();
     for (let i = 0; i < 4; i++) {
       const tor = new THREE.Mesh(
-        new THREE.TorusGeometry(7 + i * 3, 0.015, 8, 96),
+        new THREE.TorusGeometry(6 + i * 1.5, 0.02, 8, 120),
         new THREE.MeshBasicMaterial({
           color: 0xc9a86a,
           transparent: true,
-          opacity: 0.06,
+          opacity: 0.08,
         })
       );
-      tor.rotation.x = Math.PI / 2.2 + i * 0.1;
-      tor.position.z = -6 - i * 2;
+      // tilt each ring differently → gyroscope cage around the cube
+      tor.rotation.set(Math.PI / 2.4 + i * 0.18, i * 0.4, i * 0.25);
       rings.add(tor);
     }
     return { geo, rings };
