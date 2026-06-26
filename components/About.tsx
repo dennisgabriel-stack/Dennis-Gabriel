@@ -13,7 +13,7 @@ export default function About() {
           alt=""
           fill
           sizes="100vw"
-          className="object-cover object-[78%_22%] opacity-70"
+          className="object-cover object-[92%_10%] opacity-70"
           priority={false}
         />
         {/* darken the left where the text sits, keep the person visible on the right */}
