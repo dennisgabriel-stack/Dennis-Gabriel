@@ -17,10 +17,10 @@ export default function TechCubesSection() {
       id="stack-3d"
       className="relative w-full overflow-hidden py-24 md:py-32"
     >
-      <div className="relative z-10 mx-auto max-w-7xl px-6 md:px-10">
+      <div className="relative z-30 mx-auto max-w-7xl px-6 md:px-10">
         {/* portrait sized to the text block (matches sketched area), soft on all sides */}
         <div className="relative">
-          <div className="pointer-events-none absolute left-[-22%] right-[38%] top-10 z-0 bottom-[-3.5rem] md:left-auto md:right-0 md:bottom-[-1.5rem] md:top-[-1.5rem] md:w-[72%]">
+          <div className="pointer-events-none absolute left-[-22%] right-[38%] top-10 z-0 bottom-0 md:left-auto md:right-0 md:bottom-0 md:top-[-1.5rem] md:w-[72%]">
             <Image
               src="/images/stack-bg.jpeg"
               alt=""

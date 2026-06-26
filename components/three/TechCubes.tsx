@@ -351,7 +351,7 @@ function Blocks({
     const front = tmp
       .copy(camera.position)
       .add(v3.set(0, 0, -6.5).applyQuaternion(camera.quaternion));
-    front.y += 1.1;
+    front.y += 0.8;
 
     // integrate physics
     for (let i = 0; i < blocks.length; i++) {
