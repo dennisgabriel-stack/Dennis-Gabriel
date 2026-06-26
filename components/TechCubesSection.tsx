@@ -2,15 +2,25 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Reveal from "./Reveal";
 import type { Tech } from "./three/TechCubes";
+import { FORMATION_LABELS } from "./three/TechCubes";
 
 const TechCubes = dynamic(() => import("./three/TechCubes"), { ssr: false });
 
 export default function TechCubesSection() {
   const [tech, setTech] = useState<Tech | null>(null);
+  const buildRef = useRef(-1);
+  const [active, setActive] = useState(-1);
+
+  const build = (i: number) => {
+    const next = active === i ? -1 : i; // tap active again → scatter
+    buildRef.current = next;
+    setActive(next);
+    window.dispatchEvent(new CustomEvent("ux-click"));
+  };
 
   return (
     <section
@@ -80,9 +90,31 @@ export default function TechCubesSection() {
             }}
           />
         </div>
-        <TechCubes onFocus={setTech} />
+        <TechCubes onFocus={setTech} buildRef={buildRef} />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-ink to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
+
+        {/* construct builder buttons */}
+        <div className="pointer-events-none absolute inset-x-0 top-6 z-30 flex flex-col items-center gap-2 px-4">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-muted">
+            Konstrukt bauen
+          </p>
+          <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-2">
+            {FORMATION_LABELS.map((label, i) => (
+              <button
+                key={label}
+                onClick={() => build(i)}
+                className={`rounded-full border px-4 py-2 text-xs font-medium uppercase tracking-[0.16em] backdrop-blur-md transition-all duration-300 ${
+                  active === i
+                    ? "border-gold bg-gold text-ink shadow-[0_0_24px_rgba(201,168,106,0.5)]"
+                    : "border-bone/20 bg-ink/40 text-bone hover:border-gold/60 hover:text-gold"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* tech detail card on cube tap */}
         <AnimatePresence>

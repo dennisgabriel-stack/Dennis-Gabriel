@@ -1,7 +1,13 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
 import * as THREE from "three";
 
 const { lerp } = THREE.MathUtils;
@@ -111,35 +117,48 @@ function makeLabel(tech: Tech) {
   return tex;
 }
 
-// formation target positions (each returns Vector3 for block index i)
-const SP = 1.65;
-function gridWall(i: number) {
-  const col = i % 6;
-  const row = Math.floor(i / 6);
-  return new THREE.Vector3((col - 2.5) * SP, (1.5 - row) * SP, 0);
+// ===== 3 button-triggered constructs, each using all 24 cubes =====
+
+// 1) the ARCHANGEL "A" monogram — 24 cells form a capital A with a crossbar
+const A_CELLS: [number, number][] = [
+  [2, 0], [3, 0], [4, 0],
+  [2, 1], [4, 1],
+  [1, 2], [2, 2], [4, 2], [5, 2],
+  [1, 3], [5, 3],
+  [1, 4], [2, 4], [3, 4], [4, 4], [5, 4],
+  [1, 5], [5, 5],
+  [0, 6], [1, 6], [5, 6], [6, 6],
+  [0, 7], [6, 7],
+];
+function monogramA(i: number) {
+  const [c, r] = A_CELLS[i];
+  const S = 1.2;
+  return new THREE.Vector3((c - 3) * S, (3.5 - r) * S, 0);
 }
-function cubeBox(i: number) {
-  const ix = i % 4;
-  const iy = Math.floor(i / 4) % 3;
-  const iz = Math.floor(i / 12);
-  return new THREE.Vector3((ix - 1.5) * 1.8, (iy - 1) * 1.8, (iz - 0.5) * 1.8);
+
+// 2) a 2×2×6 skyscraper tower
+function tower(i: number) {
+  const lvl = Math.floor(i / 4); // 0..5
+  const k = i % 4;
+  const x = (k % 2 ? 1 : -1) * 0.66;
+  const z = (k < 2 ? -1 : 1) * 0.66;
+  return new THREE.Vector3(x, (lvl - 2.5) * 1.35, z);
 }
-function towerRings(i: number) {
-  const layer = Math.floor(i / 6);
-  const k = i % 6;
-  const ang = (k / 6) * Math.PI * 2 + layer * 0.5;
-  const r = 3.1;
-  return new THREE.Vector3(
-    Math.cos(ang) * r,
-    (1.5 - layer) * 1.8,
-    Math.sin(ang) * r
-  );
+
+// 3) a double helix (two strands of 12 — data DNA)
+function helix(i: number) {
+  const strand = Math.floor(i / 12); // 0 | 1
+  const k = i % 12;
+  const ang = k * 0.52 + strand * Math.PI;
+  const r = 2.8;
+  return new THREE.Vector3(Math.cos(ang) * r, (k - 5.5) * 0.8, Math.sin(ang) * r);
 }
-const FORMATIONS = [gridWall, cubeBox, towerRings];
+
+export const FORMATION_LABELS = ["A-Monogramm", "Turm", "Helix"];
+const FORMATIONS = [monogramA, tower, helix];
 const FORM_TARGETS = FORMATIONS.map((f) =>
   Array.from({ length: N }, (_, i) => f(i))
 );
-const HOLD = 5; // seconds per formation
 
 const RADIUS = 0.85;
 const BOUND = { x: 9, y: 5.5, z: 7 } as const;
@@ -150,9 +169,11 @@ const emitEv = (n: string) =>
 function Blocks({
   focused,
   setFocused,
+  buildRef,
 }: {
   focused: number | null;
   setFocused: (i: number | null) => void;
+  buildRef: MutableRefObject<number>;
 }) {
   const groupRef = useRef<THREE.Group>(null);
   const { camera, gl } = useThree();
@@ -218,9 +239,7 @@ function Blocks({
   const v3 = useMemo(() => new THREE.Vector3(), []);
 
   const sim = useRef({
-    formIndex: 0,
-    nextForm: HOLD,
-    reassembleUntil: 2.4,
+    lastForm: -1,
     yaw: 0,
     pitch: 0,
     tyaw: 0,
@@ -337,15 +356,14 @@ function Blocks({
     const grp = groupRef.current!;
     const focusing = focusedRef.current !== null;
 
-    // formation cycle — every few seconds they snap back into place
-    if (t > s.nextForm) {
-      s.formIndex = (s.formIndex + 1) % FORMATIONS.length;
-      s.nextForm = t + HOLD;
-      s.reassembleUntil = t + 2.4;
+    // button-driven construct: -1 = free float, 0..2 = assemble & hold
+    const form = buildRef.current;
+    if (form !== s.lastForm) {
+      s.lastForm = form;
       emitEv("ux-woosh");
     }
-    const reassembling = t < s.reassembleUntil;
-    const targets = FORM_TARGETS[s.formIndex];
+    const building = form >= 0;
+    const targets = building ? FORM_TARGETS[form] : null;
 
     // focus fly-in target — upper-centre of the canvas, above the info card
     const front = tmp
@@ -362,9 +380,10 @@ function Blocks({
         continue;
       }
       if (s.mode === "cube" && s.cubeIndex === i) continue; // held by pointer
-      if (reassembling) {
-        b.vel.addScaledVector(v1.subVectors(targets[i], b.pos), 7 * dt);
-        b.vel.multiplyScalar(0.84);
+      if (building && targets) {
+        // spring toward the construct slot and hold there
+        b.vel.addScaledVector(v1.subVectors(targets[i], b.pos), 9 * dt);
+        b.vel.multiplyScalar(0.8);
       } else {
         b.vel.multiplyScalar(0.992); // zero-gravity drift
       }
@@ -382,9 +401,9 @@ function Blocks({
       });
     }
 
-    // cube-vs-cube collisions (elastic, equal mass)
+    // cube-vs-cube collisions (elastic, equal mass) — only while free-floating
     let collided = false;
-    for (let i = 0; i < blocks.length; i++) {
+    for (let i = 0; !building && i < blocks.length; i++) {
       if (focusing && i === focused) continue;
       for (let j = i + 1; j < blocks.length; j++) {
         if (focusing && j === focused) continue;
@@ -410,7 +429,7 @@ function Blocks({
         }
       }
     }
-    if (collided && !reassembling) emitEv("ux-block");
+    if (collided && !building) emitEv("ux-block");
 
     // apply to meshes
     for (let i = 0; i < blocks.length; i++) {
@@ -503,8 +522,10 @@ function Ambience() {
 
 export default function TechCubes({
   onFocus,
+  buildRef,
 }: {
   onFocus?: (t: Tech | null) => void;
+  buildRef: MutableRefObject<number>;
 }) {
   const [focused, setFocusedState] = useState<number | null>(null);
 
@@ -531,7 +552,7 @@ export default function TechCubes({
     >
       <fog attach="fog" args={[0x0a0a0b, 16, 42]} />
       <Ambience />
-      <Blocks focused={focused} setFocused={setFocused} />
+      <Blocks focused={focused} setFocused={setFocused} buildRef={buildRef} />
     </Canvas>
   );
 }
