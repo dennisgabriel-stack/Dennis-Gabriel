@@ -1,61 +1,15 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import dynamic from "next/dynamic";
 import Reveal from "./Reveal";
 
-type Layer = {
-  tag: string;
-  name: string;
-  color: string;
-  tech: string[];
-  purpose: string;
-};
-
-const layers: Layer[] = [
-  {
-    tag: "L1",
-    name: "Presentation Layer",
-    color: "#e6c88a",
-    tech: ["Next.js", "React", "TypeScript", "Tailwind CSS", "Framer Motion", "i18n"],
-    purpose: "User Interfaces · Responsive Design · Animationen · Barrierefreiheit",
-  },
-  {
-    tag: "L2",
-    name: "Application Layer",
-    color: "#c9a86a",
-    tech: ["Node.js / Express", "REST & GraphQL", "WebSocket", "Auth / JWT", "Rate Limiting"],
-    purpose: "Business-Logik · Session-Management · Echtzeit-Kommunikation · API-Gateway",
-  },
-  {
-    tag: "L3",
-    name: "Data Layer",
-    color: "#9c8552",
-    tech: ["PostgreSQL", "Redis Cache", "Event-System", "Migrations", "Connection Pooling"],
-    purpose: "Persistenz · Analytics · Suche · Reporting · Caching",
-  },
-  {
-    tag: "L4",
-    name: "Infrastructure & Integration",
-    color: "#7a6740",
-    tech: ["Docker", "CI/CD", "Cloud (AWS)", "Web3 / Blockchain", "Monitoring"],
-    purpose: "Deployment · Skalierung · Drittsystem-Integration · Verlässliche Abwicklung",
-  },
-];
+const LayerStack = dynamic(() => import("./three/LayerStack"), { ssr: false });
 
 export default function TechStack() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start 0.8", "end 0.4"],
-  });
-  const rotateX = useTransform(scrollYProgress, [0, 0.5], [4, 26]);
-  const stackY = useTransform(scrollYProgress, [0, 1], ["2%", "-6%"]);
-
   return (
     <section id="stack" className="relative w-full overflow-hidden py-28 md:py-40">
       <div className="mx-auto max-w-7xl px-6 md:px-10">
-        <div className="mb-16 max-w-3xl">
+        <div className="mb-10 max-w-3xl">
           <Reveal>
             <p className="mb-6 text-xs uppercase tracking-[0.4em] text-gold">
               Tech-Stack
@@ -70,72 +24,18 @@ export default function TechStack() {
           <Reveal delay={0.1}>
             <p className="mt-6 text-lg text-muted">
               Vom ersten Pixel bis zur skalierbaren Infrastruktur — durchdacht,
-              robust und in Echtzeit, über Branchen und Anwendungsfälle hinweg.
+              robust und in Echtzeit. Ziehen zum Drehen, über eine Schicht fahren
+              zum Fokussieren.
             </p>
           </Reveal>
         </div>
+      </div>
 
-        {/* 3D isometric stack */}
-        <div
-          ref={ref}
-          className="relative mx-auto max-w-4xl"
-          style={{ perspective: "1600px" }}
-        >
-          <motion.div
-            style={{ rotateX, y: stackY, transformStyle: "preserve-3d" }}
-            className="flex flex-col gap-5"
-          >
-            {layers.map((layer, i) => (
-              <motion.div
-                key={layer.tag}
-                initial={{ opacity: 0, y: 80, rotateX: -10 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{
-                  duration: 0.8,
-                  delay: i * 0.12,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                whileHover={{ scale: 1.015, z: 30 }}
-                className="glass group relative rounded-xl p-6 md:p-8"
-                style={{ transformStyle: "preserve-3d" }}
-              >
-                <div
-                  className="absolute left-0 top-0 h-full w-1 rounded-l-xl"
-                  style={{ background: layer.color }}
-                />
-                <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-                  <div className="flex items-center gap-4">
-                    <span
-                      className="font-display text-3xl font-bold"
-                      style={{ color: layer.color }}
-                    >
-                      {layer.tag}
-                    </span>
-                    <h3 className="font-display text-xl font-semibold text-bone md:text-2xl">
-                      {layer.name}
-                    </h3>
-                  </div>
-                </div>
-
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {layer.tech.map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full border border-bone/10 bg-ink/40 px-3 py-1.5 text-xs text-bone/90 transition-colors group-hover:border-gold/30"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-
-                <p className="mt-5 text-sm leading-relaxed text-muted">
-                  {layer.purpose}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
+      {/* interactive 3D layer stack */}
+      <div className="relative h-[72vh] w-full md:h-[80vh]">
+        <LayerStack />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-ink to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
       </div>
     </section>
   );
