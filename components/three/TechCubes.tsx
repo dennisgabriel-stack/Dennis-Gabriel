@@ -171,7 +171,7 @@ const DG_CELLS: [number, number][] = [
 ];
 function initialsDG(i: number) {
   const [c, r] = DG_CELLS[i];
-  const S = 1.0;
+  const S = 1.2;
   return new THREE.Vector3((c - 4) * S, (2 - r) * S, 0);
 }
 
@@ -265,23 +265,33 @@ function Blocks({
     pitch: 0,
     tyaw: 0,
     tpitch: 0,
-    mode: "none" as "none" | "orbit" | "cube",
+    mode: "none" as "none" | "orbit" | "cube" | "pinch",
     cubeIndex: -1,
     lastX: 0,
     lastY: 0,
     moved: 0,
     downTime: 0,
     lastMoveT: 0,
+    zoom: 16,
+    zoomTarget: 16,
+    pinchDist: 0,
     plane: new THREE.Plane(),
   });
 
-  // imperative pointer handling: orbit empty space, grab/throw cubes
+  // imperative pointer handling: orbit empty space, grab/throw cubes, pinch-zoom
   useEffect(() => {
     const el = gl.domElement;
     const grp = groupRef.current!;
     const ray = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
     const s = sim.current;
+    const ZOOM_MIN = 8;
+    const ZOOM_MAX = 28;
+    const pointers = new Map<number, { x: number; y: number }>();
+    const pinchGap = () => {
+      const pts = [...pointers.values()];
+      return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+    };
 
     const setNdc = (e: PointerEvent) => {
       const r = el.getBoundingClientRect();
@@ -292,6 +302,14 @@ function Blocks({
     };
 
     const down = (e: PointerEvent) => {
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        // second finger → pinch-zoom (cancel any orbit/cube interaction)
+        s.mode = "pinch";
+        s.cubeIndex = -1;
+        s.pinchDist = pinchGap();
+        return;
+      }
       setNdc(e);
       ray.setFromCamera(ndc, camera);
       const hits = ray.intersectObjects(grp.children, true);
@@ -317,6 +335,20 @@ function Blocks({
     };
 
     const move = (e: PointerEvent) => {
+      if (pointers.has(e.pointerId))
+        pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (s.mode === "pinch" && pointers.size >= 2) {
+        const gap = pinchGap();
+        if (s.pinchDist > 0) {
+          s.zoomTarget = THREE.MathUtils.clamp(
+            s.zoomTarget * (s.pinchDist / gap),
+            ZOOM_MIN,
+            ZOOM_MAX
+          );
+        }
+        s.pinchDist = gap;
+        return;
+      }
       if (s.mode === "orbit") {
         s.tyaw += (e.clientX - s.lastX) * 0.006;
         s.tpitch = THREE.MathUtils.clamp(
@@ -343,7 +375,14 @@ function Blocks({
       }
     };
 
-    const up = () => {
+    const up = (e: PointerEvent) => {
+      pointers.delete(e.pointerId);
+      if (s.mode === "pinch") {
+        // drop back to idle until fingers lift; re-arm if one remains
+        s.mode = "none";
+        s.cubeIndex = -1;
+        return;
+      }
       if (s.mode === "cube") {
         const quick = performance.now() - s.downTime < 260;
         const i = s.cubeIndex;
@@ -359,13 +398,27 @@ function Blocks({
       s.cubeIndex = -1;
     };
 
+    // desktop wheel-zoom
+    const wheel = (e: WheelEvent) => {
+      e.preventDefault();
+      s.zoomTarget = THREE.MathUtils.clamp(
+        s.zoomTarget + e.deltaY * 0.02,
+        ZOOM_MIN,
+        ZOOM_MAX
+      );
+    };
+
     el.addEventListener("pointerdown", down);
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    el.addEventListener("wheel", wheel, { passive: false });
     return () => {
       el.removeEventListener("pointerdown", down);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      el.removeEventListener("wheel", wheel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -422,9 +475,12 @@ function Blocks({
       });
     }
 
-    // cube-vs-cube collisions (elastic, equal mass) — only while free-floating
+    // cube-vs-cube collisions — always on so blocks never interpenetrate.
+    // free-float: full elastic bounce. building: tighter radius + positional
+    // push only (no added energy) so the construct settles solid without jitter.
     let collided = false;
-    for (let i = 0; !building && i < blocks.length; i++) {
+    const min = building ? 1.18 : RADIUS * 2;
+    for (let i = 0; i < blocks.length; i++) {
       if (focusing && i === focused) continue;
       for (let j = i + 1; j < blocks.length; j++) {
         if (focusing && j === focused) continue;
@@ -432,7 +488,6 @@ function Blocks({
         const c = blocks[j];
         const n = v1.subVectors(c.pos, a.pos);
         const dist = n.length();
-        const min = RADIUS * 2;
         if (dist > 0.0001 && dist < min) {
           n.multiplyScalar(1 / dist);
           const overlap = min - dist;
@@ -441,7 +496,7 @@ function Blocks({
           if (!aHeld) a.pos.addScaledVector(n, -overlap * (cHeld ? 1 : 0.5));
           if (!cHeld) c.pos.addScaledVector(n, overlap * (aHeld ? 1 : 0.5));
           const sep = v2.subVectors(c.vel, a.vel).dot(n);
-          if (sep < 0) {
+          if (!building && sep < 0) {
             const imp = -sep * 0.9;
             if (!aHeld) a.vel.addScaledVector(n, -imp * (cHeld ? 1 : 0.5));
             if (!cHeld) c.vel.addScaledVector(n, imp * (aHeld ? 1 : 0.5));
@@ -463,9 +518,17 @@ function Blocks({
         b.mats.forEach((m, jj) => (m.opacity = b.baseOpacity[jj]));
       } else {
         b.mesh.scale.setScalar(lerp(b.mesh.scale.x, 1, 0.1));
-        const spd = b.vel.length();
-        b.mesh.rotation.x += (0.15 + spd * 0.12) * dt;
-        b.mesh.rotation.y += (0.2 + spd * 0.1) * dt;
+        const held = s.mode === "cube" && s.cubeIndex === i;
+        if (building && !held) {
+          // grid-align the cube so faces tile cleanly (no corner clipping)
+          b.mesh.rotation.x = lerp(b.mesh.rotation.x, 0, 0.12);
+          b.mesh.rotation.y = lerp(b.mesh.rotation.y, 0, 0.12);
+          b.mesh.rotation.z = lerp(b.mesh.rotation.z, 0, 0.12);
+        } else {
+          const spd = b.vel.length();
+          b.mesh.rotation.x += (0.15 + spd * 0.12) * dt;
+          b.mesh.rotation.y += (0.2 + spd * 0.1) * dt;
+        }
         const dimTo = focusing ? 0.12 : 1;
         b.mats.forEach(
           (m, jj) => (m.opacity = lerp(m.opacity, b.baseOpacity[jj] * dimTo, 0.1))
@@ -479,6 +542,10 @@ function Blocks({
     s.pitch = lerp(s.pitch, s.tpitch, 0.1);
     grp.rotation.y = focusing ? lerp(grp.rotation.y, 0, 0.06) : s.yaw;
     grp.rotation.x = focusing ? lerp(grp.rotation.x, 0, 0.06) : s.pitch;
+
+    // wheel / pinch zoom — dolly the camera along its view axis
+    s.zoom = lerp(s.zoom, s.zoomTarget, 0.12);
+    camera.position.z = s.zoom;
   });
 
   return (
