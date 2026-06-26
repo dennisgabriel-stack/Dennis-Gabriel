@@ -212,6 +212,7 @@ function Blocks({
       baseOpacity: number[];
       pos: THREE.Vector3;
       vel: THREE.Vector3;
+      landed: boolean;
     }[] = [];
     const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
     const edgeGeo = new THREE.EdgesGeometry(geo);
@@ -249,6 +250,7 @@ function Blocks({
         baseOpacity: [1, 0.85, 0.06],
         pos,
         vel: new THREE.Vector3(),
+        landed: false,
       });
     });
     return arr;
@@ -275,6 +277,7 @@ function Blocks({
     zoom: 16,
     zoomTarget: 16,
     pinchDist: 0,
+    burstDone: false,
     plane: new THREE.Plane(),
   });
 
@@ -430,10 +433,12 @@ function Blocks({
     const grp = groupRef.current!;
     const focusing = focusedRef.current !== null;
 
-    // button-driven construct: -1 = free float, 0..2 = assemble & hold
+    // button-driven construct: -1 = free float, 0..3 = assemble & hold
     const form = buildRef.current;
     if (form !== s.lastForm) {
       s.lastForm = form;
+      s.burstDone = false;
+      for (const b of blocks) b.landed = false; // re-arm landing snaps
       emitEv("ux-woosh");
     }
     const building = form >= 0;
@@ -506,6 +511,26 @@ function Blocks({
       }
     }
     if (collided && !building) emitEv("ux-block");
+
+    // assembly sound: a snap as each block locks into its slot, then a
+    // completion burst once the construct is essentially built
+    if (building && targets) {
+      let landedCount = 0;
+      for (let i = 0; i < blocks.length; i++) {
+        const b = blocks[i];
+        if (b.pos.distanceTo(targets[i]) < 0.45) {
+          if (!b.landed) {
+            b.landed = true;
+            emitEv("ux-block"); // soft snap, throttled in the SoundManager
+          }
+          landedCount++;
+        }
+      }
+      if (!s.burstDone && landedCount >= blocks.length - 1) {
+        s.burstDone = true;
+        emitEv("ux-burst");
+      }
+    }
 
     // apply to meshes
     for (let i = 0; i < blocks.length; i++) {
