@@ -45,13 +45,13 @@ export default function Hero() {
           fill
           priority
           sizes="100vw"
-          className="hidden scale-[1.45] object-contain object-[62%_10%] opacity-95 md:block"
+          className="hidden scale-[1.45] object-contain object-[62%_24%] opacity-95 md:block"
         />
       </motion.div>
 
       {/* Cinematic overlays to keep the text readable */}
-      <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-ink via-ink/70 to-transparent" />
-      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_25%,#0a0a0b_88%)]" />
+      <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-ink via-ink/70 to-transparent md:from-ink/75 md:via-ink/20 md:to-transparent" />
+      <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_25%,#0a0a0b_88%)] md:bg-[radial-gradient(ellipse_at_60%_50%,transparent_45%,#0a0a0b_98%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-48 bg-gradient-to-t from-ink to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-32 bg-gradient-to-b from-ink to-transparent" />
 
