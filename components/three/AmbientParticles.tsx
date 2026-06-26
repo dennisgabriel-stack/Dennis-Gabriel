@@ -6,6 +6,8 @@ import * as THREE from "three";
 
 function Field() {
   const stars = useRef<THREE.Points>(null);
+  const rings = useRef<THREE.Group>(null);
+
   const geo = useMemo(() => {
     const SN = 900;
     const pos = new Float32Array(SN * 3);
@@ -22,25 +24,51 @@ function Field() {
     return g;
   }, []);
 
+  // large faint rings that continue the ring motif from the section above
+  const ringGroup = useMemo(() => {
+    const grp = new THREE.Group();
+    grp.position.y = 7; // sit toward the top, flowing down from above
+    for (let i = 0; i < 4; i++) {
+      const tor = new THREE.Mesh(
+        new THREE.TorusGeometry(7 + i * 2, 0.02, 8, 120),
+        new THREE.MeshBasicMaterial({
+          color: 0xc9a86a,
+          transparent: true,
+          opacity: 0.07,
+        })
+      );
+      tor.rotation.set(Math.PI / 2.4 + i * 0.18, i * 0.4, i * 0.25);
+      grp.add(tor);
+    }
+    return grp;
+  }, []);
+
   useFrame((state, delta) => {
     if (stars.current) {
       stars.current.rotation.y += delta * 0.02;
       stars.current.rotation.x =
         Math.sin(state.clock.elapsedTime * 0.05) * 0.08;
     }
+    if (rings.current) {
+      rings.current.rotation.z += delta * 0.04;
+      rings.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.05) * 0.1;
+    }
   });
 
   return (
-    <points ref={stars} geometry={geo}>
-      <pointsMaterial
-        size={0.05}
-        color={0xc9a86a}
-        transparent
-        opacity={0.5}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </points>
+    <>
+      <points ref={stars} geometry={geo}>
+        <pointsMaterial
+          size={0.05}
+          color={0xc9a86a}
+          transparent
+          opacity={0.5}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
+      <primitive ref={rings} object={ringGroup} />
+    </>
   );
 }
 
