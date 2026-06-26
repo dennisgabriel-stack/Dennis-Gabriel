@@ -12,8 +12,8 @@ export default function About() {
   });
 
   // first only the man is visible, then the text fades in on scroll
-  const textOpacity = useTransform(scrollYProgress, [0.14, 0.4], [0, 1]);
-  const textY = useTransform(scrollYProgress, [0.14, 0.42], [60, 0]);
+  const textOpacity = useTransform(scrollYProgress, [0.06, 0.24], [0, 1]);
+  const textY = useTransform(scrollYProgress, [0.06, 0.26], [60, 0]);
   // the portrait recedes slightly as the text takes over
   const imgOpacity = useTransform(scrollYProgress, [0.1, 0.5], [0.85, 0.5]);
   const imgScale = useTransform(scrollYProgress, [0, 0.6], [1.12, 1]);
@@ -32,7 +32,7 @@ export default function About() {
               alt=""
               fill
               sizes="100vw"
-              className="object-cover object-[92%_10%]"
+              className="object-cover object-[58%_10%]"
               priority={false}
             />
           </motion.div>
