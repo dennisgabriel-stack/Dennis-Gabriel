@@ -124,7 +124,31 @@ export default function TechCubesSection() {
         </div>
       </div>
 
-      <div className="relative z-20 -mt-10 h-[68vh] w-full md:-mt-6 md:h-[74vh]">
+      {/* construct builder — 4 icons between the text and the 3D area */}
+      <div className="relative z-30 mx-auto mt-10 flex max-w-7xl flex-col items-center gap-2 px-6 md:mt-12">
+        <p className="text-[10px] uppercase tracking-[0.35em] text-muted">
+          Konstrukt bauen
+        </p>
+        <div className="flex items-center justify-center gap-3">
+          {CONSTRUCT_ICONS.map((icon, i) => (
+            <button
+              key={FORMATION_LABELS[i]}
+              onClick={() => build(i)}
+              aria-label={FORMATION_LABELS[i]}
+              title={FORMATION_LABELS[i]}
+              className={`flex h-12 w-12 items-center justify-center rounded-xl border backdrop-blur-md transition-all duration-300 ${
+                active === i
+                  ? "border-gold bg-gold text-ink shadow-[0_0_24px_rgba(201,168,106,0.55)]"
+                  : "border-bone/20 bg-ink/40 text-bone hover:border-gold/60 hover:text-gold"
+              }`}
+            >
+              {icon}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="relative z-20 mt-6 h-[64vh] w-full md:h-[72vh]">
         {/* animated gold aurora behind the cubes */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
@@ -147,30 +171,6 @@ export default function TechCubesSection() {
         <TechCubes onFocus={setTech} buildRef={buildRef} />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-ink to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
-
-        {/* construct builder — 4 icons symbolising what each one builds */}
-        <div className="pointer-events-none absolute inset-x-0 top-28 z-30 flex flex-col items-center gap-2 px-4 md:top-16">
-          <p className="text-[10px] uppercase tracking-[0.35em] text-muted">
-            Konstrukt bauen
-          </p>
-          <div className="pointer-events-auto flex items-center justify-center gap-3">
-            {CONSTRUCT_ICONS.map((icon, i) => (
-              <button
-                key={FORMATION_LABELS[i]}
-                onClick={() => build(i)}
-                aria-label={FORMATION_LABELS[i]}
-                title={FORMATION_LABELS[i]}
-                className={`flex h-12 w-12 items-center justify-center rounded-xl border backdrop-blur-md transition-all duration-300 ${
-                  active === i
-                    ? "border-gold bg-gold text-ink shadow-[0_0_24px_rgba(201,168,106,0.55)]"
-                    : "border-bone/20 bg-ink/40 text-bone hover:border-gold/60 hover:text-gold"
-                }`}
-              >
-                {icon}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* tech detail card on cube tap */}
         <AnimatePresence>
