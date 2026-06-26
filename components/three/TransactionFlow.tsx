@@ -83,7 +83,7 @@ type P = {
 };
 
 function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
-  const { pointer, gl } = useThree();
+  const { gl } = useThree();
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const col = useMemo(() => new THREE.Color(), []);
   const orbit = useRef({
@@ -109,7 +109,7 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     const move = (e: PointerEvent) => {
       if (!o.drag) return;
       o.tyaw += (e.clientX - o.lx) * 0.005;
-      o.tpitch = clamp(o.tpitch + (e.clientY - o.ly) * 0.004, -0.6, 0.6);
+      o.tpitch = clamp(o.tpitch - (e.clientY - o.ly) * 0.004, -1.2, 1.2);
       o.lx = e.clientX;
       o.ly = e.clientY;
     };
@@ -570,20 +570,24 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     lock.scale.setScalar(1.5 * (1 + Math.sin(t * 2) * 0.03 + f * 0.18));
     flashState.v *= 0.9;
 
-    // mouse-drag orbit: rotate the whole scene to look around
+    // camera stays ON the pipeline line; scroll = forward, drag = look around
     const o = orbit.current;
-    o.yaw = lerp(o.yaw, o.tyaw, 0.08);
-    o.pitch = lerp(o.pitch, o.tpitch, 0.08);
-    built.group.rotation.y = o.yaw;
-    built.group.rotation.x = o.pitch;
+    o.yaw = lerp(o.yaw, o.tyaw, 0.1);
+    o.pitch = lerp(o.pitch, o.tpitch, 0.1);
 
-    // scroll-driven camera dolly through the pipeline
     const camZ = lerp(22, -56, p);
     const cam = state.camera;
-    cam.position.x = lerp(cam.position.x, Math.sin(t * 0.1) * 1.4 + pointer.x * 2, 0.05);
-    cam.position.y = lerp(cam.position.y, 2.4 + Math.sin(t * 0.13) * 0.5 - pointer.y * 1.4, 0.05);
+    cam.position.x = lerp(cam.position.x, 0, 0.06);
+    cam.position.y = lerp(cam.position.y, 1.4, 0.06);
     cam.position.z = lerp(cam.position.z, camZ, 0.08);
-    cam.lookAt(0, 0, cam.position.z - 16);
+
+    // first-person look direction (default looks down the pipeline, -Z)
+    const cp = Math.cos(o.pitch);
+    cam.lookAt(
+      cam.position.x + Math.sin(o.yaw) * cp * 16,
+      cam.position.y + Math.sin(o.pitch) * 16,
+      cam.position.z - Math.cos(o.yaw) * cp * 16
+    );
   });
 
   return <primitive object={built.group} />;
