@@ -82,7 +82,7 @@ export default function TechCubesSection() {
   return (
     <section
       id="stack-3d"
-      className="relative w-full overflow-hidden py-24 md:py-32"
+      className="relative w-full overflow-hidden pb-24 pt-48 md:pb-32 md:pt-56"
     >
       <div className="relative z-30 mx-auto max-w-7xl px-6 md:px-10">
         {/* thinking-pose portrait (cutout) behind the heading, like the sketch */}
