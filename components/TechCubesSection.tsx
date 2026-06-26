@@ -82,12 +82,12 @@ export default function TechCubesSection() {
   return (
     <section
       id="stack-3d"
-      className="relative w-full overflow-hidden pb-24 pt-48 md:pb-32 md:pt-56"
+      className="relative z-20 w-full overflow-x-clip pb-24 pt-48 md:pb-32 md:pt-56"
     >
       <div className="relative z-30 mx-auto max-w-7xl px-6 md:px-10">
         {/* thinking-pose portrait (cutout) behind the heading, like the sketch */}
         <div className="relative">
-          <div className="pointer-events-none absolute left-[-16%] right-0 -top-40 z-0 h-[380px] overflow-hidden md:left-[-6%] md:-top-48 md:h-[520px]">
+          <div className="pointer-events-none absolute left-[-16%] right-0 -top-52 z-0 h-[380px] overflow-x-clip md:left-[-6%] md:-top-60 md:h-[520px]">
             <Image
               src="/images/stack-person.png"
               alt=""
