@@ -221,12 +221,14 @@ function Blocks({
     }
     const targets = FORM_TARGETS[fIndex];
 
-    // position in front of the camera for the focused cube
+    // position in front of the camera for the focused cube (kept lower
+    // so it stays within the canvas, not up behind the heading)
     const front = tmp
       .copy(camera.position)
       .add(
         new THREE.Vector3(0, 0, -6.5).applyQuaternion(camera.quaternion)
       );
+    front.y -= 2.3;
 
     blocks.forEach((b, i) => {
       if (focusing && i === focused) {

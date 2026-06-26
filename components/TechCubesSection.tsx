@@ -60,7 +60,7 @@ export default function TechCubesSection() {
         </div>
       </div>
 
-      <div className="relative -mt-10 h-[68vh] w-full md:-mt-6 md:h-[74vh]">
+      <div className="relative z-20 -mt-10 h-[68vh] w-full md:-mt-6 md:h-[74vh]">
         {/* animated gold aurora behind the cubes */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
@@ -93,7 +93,7 @@ export default function TechCubesSection() {
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: 20, filter: "blur(8px)" }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="glass absolute bottom-8 left-1/2 z-20 w-[88%] max-w-sm -translate-x-1/2 overflow-hidden rounded-2xl p-6"
+              className="glass absolute inset-x-4 bottom-10 z-30 mx-auto max-w-sm overflow-hidden rounded-2xl p-6"
               style={{
                 boxShadow: `0 0 50px ${tech.accent}33`,
                 border: `1px solid ${tech.accent}40`,
