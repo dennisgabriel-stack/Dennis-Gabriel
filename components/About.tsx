@@ -28,18 +28,22 @@ export default function About() {
         <Reveal delay={0.15}>
           <p className="mt-5 text-lg leading-relaxed text-muted">
             Mehrere produktive Websites und Anwendungen mit unterschiedlichen
-            Tech-Stacks gebaut. Hohe Fortbildungen in{" "}
-            <span className="text-bone">KI &amp; Automatisierung</span> und{" "}
-            <span className="text-bone">Grafik-Design</span>.
+            Tech-Stacks gebaut. Belegt durch{" "}
+            <span className="text-bone">18 verifizierte Zertifikate</span> in
+            verschiedensten Coding-Segmenten — von{" "}
+            <span className="text-bone">KI &amp; Automatisierung</span> bis{" "}
+            <span className="text-bone">Grafik-Design</span>, jederzeit
+            vorlegbar.
           </p>
         </Reveal>
 
         <Reveal delay={0.2}>
-          <div className="mt-12 grid grid-cols-3 gap-6 border-t border-bone/10 pt-8">
+          <div className="mt-12 grid grid-cols-2 gap-6 border-t border-bone/10 pt-8 md:grid-cols-4">
             {[
+              { n: "18", l: "Verifizierte Zertifikate" },
               { n: "8+", l: "Sprachen (i18n)" },
-              { n: "4", l: "Architektur-Layer" },
-              { n: "∞", l: "Pixel poliert" },
+              { n: "4", l: "Sicherheits-Stufen" },
+              { n: "∞", l: "Design-Möglichkeiten" },
             ].map((s) => (
               <div key={s.l}>
                 <div className="font-display text-3xl font-bold text-bone md:text-4xl">
