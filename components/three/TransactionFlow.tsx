@@ -10,38 +10,26 @@ const ss = (e0: number, e1: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-// flow axis (data travels into depth, -Z)
-const Z_START = 12;
-const Z_END = -66;
-const RANGE = Z_START - Z_END;
-
-// stage z-positions
-const STAGES = {
-  ingest: 8,
-  order: -8,
-  security: -24,
-  orchestrator: -38,
-  distribution: -52,
-  settlement: -64,
+// ---- pipeline geometry (camera flies -Z as you scroll) ----
+const SPAWN = 12;
+const ST = {
+  ingest: 2,
+  order: -15,
+  security: -32,
+  core: -49,
+  dist: -65,
+  settle: -82,
 };
+const CAM_START = 20;
+const CAM_END = -78;
+const FOCUS_AHEAD = 12;
 
-const C_GRAY = new THREE.Color(0x5c5c66);
+const C_GRAY = new THREE.Color(0x6a6a72);
 const C_GOLD = new THREE.Color(0xc9a86a);
 const C_GOLDB = new THREE.Color(0xe6c88a);
 const C_BONE = new THREE.Color(0xf5f4f0);
 const C_RED = new THREE.Color(0xc0392b);
 
-// stage thresholds along normalized travel s (0..1)
-const sOf = (z: number) => (Z_START - z) / RANGE;
-const S_ORDER_A = sOf(STAGES.ingest);
-const S_ORDER_B = sOf(STAGES.order);
-const S_SEC = sOf(STAGES.security);
-const S_ORCH = sOf(STAGES.orchestrator);
-const S_DIST_A = sOf(STAGES.orchestrator);
-const S_DIST_B = sOf(STAGES.distribution);
-const S_SETTLE = sOf(STAGES.settlement);
-
-// 3x3 grid texture → little Rubik-cube faces
 function makeGridTex() {
   const S = 128;
   const c = document.createElement("canvas");
@@ -52,8 +40,8 @@ function makeGridTex() {
   ctx.fillStyle = "rgba(255,255,255,0.10)";
   ctx.fillRect(0, 0, S, S);
   ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 8;
-  ctx.strokeRect(4, 4, S - 8, S - 8);
+  ctx.lineWidth = 9;
+  ctx.strokeRect(5, 5, S - 10, S - 10);
   ctx.lineWidth = 5;
   for (let i = 1; i < 3; i++) {
     const p = (S / 3) * i;
@@ -68,35 +56,28 @@ function makeGridTex() {
   return tex;
 }
 
-type P = {
+type Pkt = {
   t: number;
-  speed: number;
+  sp: number;
   seed: number;
   ox: number;
   oy: number;
-  sx: number;
-  sy: number;
+  lx: number;
+  ly: number;
   dx: number;
   dy: number;
-  base: number;
-  rejected: boolean;
+  bad: boolean;
+  dead: boolean;
 };
 
 function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
   const { gl } = useThree();
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const col = useMemo(() => new THREE.Color(), []);
-  const orbit = useRef({
-    yaw: 0,
-    pitch: 0,
-    tyaw: 0,
-    tpitch: 0,
-    drag: false,
-    lx: 0,
-    ly: 0,
-  });
+  const tmp = useMemo(() => new THREE.Vector3(), []);
 
-  // mouse-drag orbit (touch left for page scrolling)
+  // first-person look-around on the fixed line
+  const orbit = useRef({ yaw: 0, pitch: 0, tyaw: 0, tpitch: 0, drag: false, lx: 0, ly: 0 });
   useEffect(() => {
     const el = gl.domElement;
     const o = orbit.current;
@@ -113,9 +94,7 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
       o.lx = e.clientX;
       o.ly = e.clientY;
     };
-    const up = () => {
-      o.drag = false;
-    };
+    const up = () => (o.drag = false);
     el.addEventListener("pointerdown", down);
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
@@ -128,460 +107,429 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
 
   const built = useMemo(() => {
     const group = new THREE.Group();
-    const spinners: { mesh: THREE.Object3D; ax: "x" | "y" | "z"; sp: number }[] =
-      [];
-    const pulses: { mesh: THREE.Mesh; phase: number }[] = [];
+    const spin: { o: THREE.Object3D; ax: "x" | "y" | "z"; sp: number }[] = [];
+    const pulse: { o: THREE.Object3D; ph: number }[] = [];
+    // focus-dim registry: each material with its base opacity + world z
+    const focus: { m: THREE.Material & { opacity: number }; base: number; z: number }[] = [];
+    const reg = (o: THREE.Object3D, z: number) => {
+      o.traverse((c) => {
+        const mm = (c as THREE.Mesh).material as THREE.Material | THREE.Material[];
+        if (!mm) return;
+        (Array.isArray(mm) ? mm : [mm]).forEach((m) => {
+          m.transparent = true;
+          focus.push({ m: m as THREE.Material & { opacity: number }, base: (m as THREE.Material & { opacity: number }).opacity, z });
+        });
+      });
+    };
+    const gold = (op: number) =>
+      new THREE.MeshBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: op });
+    const bone = (op: number) =>
+      new THREE.MeshBasicMaterial({ color: 0xf5f4f0, transparent: true, opacity: op });
 
-    // ---- ingest funnel: narrowing, rotating rings that catch the data ----
+    // ===== 1) INGEST — intake funnel of narrowing rings =====
     for (let i = 0; i < 8; i++) {
-      const fr = 8 - i * 0.95; // wide mouth → narrow throat
-      const fz = STAGES.ingest + 5 - i * 2.1; // from in front of ingest toward order
+      const fr = 8 - i * 0.95;
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(Math.max(0.7, fr), 0.025, 8, 96),
-        new THREE.MeshBasicMaterial({
-          color: 0xc9a86a,
-          transparent: true,
-          opacity: 0.16,
-        })
+        new THREE.TorusGeometry(Math.max(0.7, fr), 0.03, 8, 96),
+        gold(0.16)
       );
-      ring.position.z = fz;
+      ring.position.z = ST.ingest + 6 - i * 2.0;
       group.add(ring);
-      spinners.push({ mesh: ring, ax: "z", sp: 0.1 + i * 0.05 });
+      spin.push({ o: ring, ax: "z", sp: 0.1 + i * 0.05 });
+      reg(ring, ring.position.z);
     }
-    // ---- portal rings at the later stages (clean tunnel to fly through) ----
-    [
-      STAGES.security,
-      STAGES.orchestrator,
-      STAGES.distribution,
-      STAGES.settlement,
-    ].forEach((z, i) => {
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(4.6, 0.02, 8, 80),
-        new THREE.MeshBasicMaterial({
-          color: i % 2 ? 0xc9a86a : 0xf5f4f0,
-          transparent: true,
-          opacity: 0.08,
-        })
+
+    // ===== 2) SEQUENCING — ordered lane lattice (slots) =====
+    const GC = 6;
+    const GR = 4;
+    const slots: { x: number; y: number }[] = [];
+    for (let r = 0; r < GR; r++)
+      for (let c = 0; c < GC; c++)
+        slots.push({ x: (c - (GC - 1) / 2) * 1.25, y: (r - (GR - 1) / 2) * 1.25 });
+    const latticeFrame = new THREE.Mesh(
+      new THREE.TorusGeometry(4.4, 0.02, 6, 4), // diamond frame
+      gold(0.0)
+    );
+    const seqFrame = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(8, 5.6, 0.3)),
+      new THREE.LineBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.3 })
+    );
+    seqFrame.position.z = ST.order;
+    group.add(seqFrame);
+    reg(seqFrame, ST.order);
+    void latticeFrame;
+    // lane guide lines from order → security
+    slots.forEach((s2) => {
+      const g = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(s2.x, s2.y, ST.order),
+        new THREE.Vector3(s2.x, s2.y, ST.core),
+      ]);
+      const ln = new THREE.Line(
+        g,
+        new THREE.LineBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.06 })
       );
-      ring.position.z = z;
-      group.add(ring);
+      group.add(ln);
+      reg(ln, (ST.order + ST.security) / 2);
     });
 
-    // ---- ordering lattice (slots data snaps into) ----
-    const GRID_C = 8;
-    const GRID_R = 5;
-    const slots: { x: number; y: number }[] = [];
-    for (let r = 0; r < GRID_R; r++)
-      for (let c = 0; c < GRID_C; c++)
-        slots.push({ x: (c - (GRID_C - 1) / 2) * 1.05, y: (r - (GRID_R - 1) / 2) * 1.05 });
-
-    const latticeFrame = new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(9.2, 6, 0.4)),
-      new THREE.LineBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.22 })
-    );
-    latticeFrame.position.z = STAGES.order;
-    group.add(latticeFrame);
-
-    // ---- security gates (multi-stage) with scan sweeps ----
-    const gateDefs = [
-      { z: STAGES.security + 3, r: 3.4 },
-      { z: STAGES.security, r: 2.9 },
-      { z: STAGES.security - 3, r: 2.4 },
-    ];
-    gateDefs.forEach((g, i) => {
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(g.r, 0.04, 10, 80),
-        new THREE.MeshBasicMaterial({
-          color: 0xc9a86a,
-          transparent: true,
-          opacity: 0.55,
-        })
-      );
+    // ===== 3) SECURITY — gates + scan + padlock =====
+    [
+      { z: ST.security + 3, r: 3.6 },
+      { z: ST.security, r: 3.0 },
+      { z: ST.security - 3, r: 2.5 },
+    ].forEach((g, i) => {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(g.r, 0.04, 10, 90), gold(0.55));
       ring.position.z = g.z;
       group.add(ring);
-      spinners.push({ mesh: ring, ax: "z", sp: i % 2 ? -0.5 : 0.5 });
-
-      // radar scan bar
-      const bar = new THREE.Mesh(
-        new THREE.BoxGeometry(g.r * 2, 0.04, 0.04),
-        new THREE.MeshBasicMaterial({
-          color: 0xe6c88a,
-          transparent: true,
-          opacity: 0.5,
-        })
-      );
+      spin.push({ o: ring, ax: "z", sp: i % 2 ? -0.5 : 0.5 });
+      reg(ring, g.z);
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(g.r * 2, 0.04, 0.04), gold(0.5));
       bar.position.z = g.z;
       group.add(bar);
-      spinners.push({ mesh: bar, ax: "z", sp: 1.4 - i * 0.3 });
+      spin.push({ o: bar, ax: "z", sp: 1.4 - i * 0.3 });
+      reg(bar, g.z);
     });
-
-    // ---- security padlock (blocks rejected, passes valid) ----
+    // padlock
     const lock = new THREE.Group();
-    lock.position.z = STAGES.security;
-    const lockMats: { mat: THREE.MeshBasicMaterial | THREE.LineBasicMaterial; base: THREE.Color }[] = [];
-    const addLockMat = (
-      mat: THREE.MeshBasicMaterial | THREE.LineBasicMaterial
-    ) => {
-      lockMats.push({ mat, base: mat.color.clone() });
-      return mat;
+    lock.position.z = ST.security;
+    const lockMats: { m: THREE.MeshBasicMaterial | THREE.LineBasicMaterial; base: THREE.Color }[] = [];
+    const lk = (m: THREE.MeshBasicMaterial | THREE.LineBasicMaterial) => {
+      lockMats.push({ m, base: m.color.clone() });
+      return m;
     };
-
-    // body (translucent fill + crisp edges)
-    const bodyGeo = new THREE.BoxGeometry(1.5, 1.25, 0.5);
-    const bodyFill = new THREE.Mesh(
-      bodyGeo,
-      addLockMat(
-        new THREE.MeshBasicMaterial({
-          color: 0xc9a86a,
-          transparent: true,
-          opacity: 0.12,
-          depthWrite: false,
-        })
-      )
+    const body = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(1.6, 1.3, 0.5)),
+      lk(new THREE.LineBasicMaterial({ color: 0xe6c88a, transparent: true, opacity: 0.9 }))
     );
-    bodyFill.position.y = -0.35;
-    lock.add(bodyFill);
-    const bodyEdges = new THREE.LineSegments(
-      new THREE.EdgesGeometry(bodyGeo),
-      addLockMat(
-        new THREE.LineBasicMaterial({ color: 0xe6c88a, transparent: true, opacity: 0.85 })
-      )
-    );
-    bodyEdges.position.y = -0.35;
-    lock.add(bodyEdges);
-
-    // shackle (∩ arc on top)
+    body.position.y = -0.35;
+    lock.add(body);
     const shackle = new THREE.Mesh(
-      new THREE.TorusGeometry(0.46, 0.09, 14, 48, Math.PI),
-      addLockMat(
-        new THREE.MeshBasicMaterial({ color: 0xe6c88a, transparent: true, opacity: 0.9 })
-      )
+      new THREE.TorusGeometry(0.48, 0.09, 14, 48, Math.PI),
+      lk(new THREE.MeshBasicMaterial({ color: 0xe6c88a, transparent: true, opacity: 0.9 }))
     );
-    shackle.position.y = 0.28;
+    shackle.position.y = 0.3;
     lock.add(shackle);
-    // shackle legs
-    [-0.46, 0.46].forEach((x) => {
-      const leg = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.09, 0.09, 0.32, 12),
-        addLockMat(
-          new THREE.MeshBasicMaterial({ color: 0xe6c88a, transparent: true, opacity: 0.9 })
-        )
-      );
-      leg.position.set(x, 0.12, 0);
-      lock.add(leg);
-    });
-
-    // keyhole
-    const keyRing = new THREE.Mesh(
-      new THREE.TorusGeometry(0.13, 0.035, 8, 24),
-      addLockMat(
-        new THREE.MeshBasicMaterial({ color: 0xf5f4f0, transparent: true, opacity: 0.9 })
-      )
-    );
-    keyRing.position.set(0, -0.3, 0.26);
-    lock.add(keyRing);
-
-    lock.scale.setScalar(1.5);
+    lock.scale.setScalar(1.4);
     group.add(lock);
-    const flashState = { v: 0 };
+    reg(lock, ST.security);
 
-    // ---- orchestrator core: hub + radial conductor arms ----
+    // ===== 4) CORE — gives weight/rights =====
     const core = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(0.9, 1),
-      new THREE.MeshBasicMaterial({ color: 0xf5f4f0, wireframe: true })
+      new THREE.IcosahedronGeometry(1.1, 1),
+      new THREE.MeshBasicMaterial({ color: 0xf5f4f0, wireframe: true, transparent: true, opacity: 0.85 })
     );
-    core.position.z = STAGES.orchestrator;
+    core.position.z = ST.core;
     group.add(core);
-    spinners.push({ mesh: core, ax: "y", sp: 0.5 });
-
-    const arms = new THREE.Group();
-    arms.position.z = STAGES.orchestrator;
-    const ARMS = 10;
-    for (let i = 0; i < ARMS; i++) {
-      const a = (i / ARMS) * Math.PI * 2;
-      const tip = new THREE.Vector3(Math.cos(a) * 3.2, Math.sin(a) * 3.2, 0);
-      const line = new THREE.Line(
-        new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), tip]),
-        new THREE.LineBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.3 })
-      );
-      arms.add(line);
-      const node = new THREE.Mesh(
-        new THREE.OctahedronGeometry(0.16),
-        new THREE.MeshBasicMaterial({ color: 0xc9a86a })
-      );
-      node.position.copy(tip);
-      arms.add(node);
-      pulses.push({ mesh: node, phase: i * 0.4 });
+    spin.push({ o: core, ax: "y", sp: 0.5 });
+    reg(core, ST.core);
+    const shield = new THREE.Mesh(
+      new THREE.TorusGeometry(3, 0.04, 10, 90),
+      bone(0.3)
+    );
+    shield.position.z = ST.core;
+    shield.rotation.y = Math.PI / 2;
+    group.add(shield);
+    spin.push({ o: shield, ax: "x", sp: 0.6 });
+    reg(shield, ST.core);
+    const ring = new THREE.Group();
+    ring.position.z = ST.core;
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const v = new THREE.Mesh(new THREE.OctahedronGeometry(0.18), gold(0.9));
+      v.position.set(Math.cos(a) * 2.6, Math.sin(a) * 2.6, 0);
+      ring.add(v);
+      pulse.push({ o: v, ph: i });
     }
-    group.add(arms);
-    spinners.push({ mesh: arms, ax: "z", sp: 0.18 });
+    group.add(ring);
+    spin.push({ o: ring, ax: "z", sp: 0.3 });
+    reg(ring, ST.core);
 
-    // ---- distribution destinations + routing lines ----
+    // ===== 5) DISTRIBUTION — fan-out routing to destinations =====
     const dests = [
       { x: -5, y: 2.6 },
       { x: 5, y: 2.6 },
       { x: -5, y: -2.6 },
       { x: 5, y: -2.6 },
-      { x: 0, y: 3.4 },
-      { x: 0, y: -3.4 },
+      { x: 0, y: 3.6 },
+      { x: 0, y: -3.6 },
     ];
     dests.forEach((d) => {
-      const start = new THREE.Vector3(0, 0, STAGES.orchestrator);
-      const end = new THREE.Vector3(d.x, d.y, STAGES.distribution);
+      const start = new THREE.Vector3(0, 0, ST.core);
+      const end = new THREE.Vector3(d.x, d.y, ST.dist);
       const mid = new THREE.Vector3(d.x * 0.5, d.y * 0.5, (start.z + end.z) / 2);
       const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
-      group.add(
-        new THREE.Mesh(
-          new THREE.TubeGeometry(curve, 24, 0.015, 6, false),
-          new THREE.MeshBasicMaterial({
-            color: 0xc9a86a,
-            transparent: true,
-            opacity: 0.14,
-          })
-        )
+      const tube = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 24, 0.015, 6, false),
+        gold(0.14)
       );
-      const marker = new THREE.Mesh(
-        new THREE.TorusGeometry(0.32, 0.03, 8, 32),
-        new THREE.MeshBasicMaterial({ color: 0xf5f4f0, transparent: true, opacity: 0.6 })
-      );
-      marker.position.copy(end);
-      group.add(marker);
-      pulses.push({ mesh: marker, phase: d.x + d.y });
+      group.add(tube);
+      reg(tube, (ST.core + ST.dist) / 2);
+      const mk = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.03, 8, 32), bone(0.5));
+      mk.position.copy(end);
+      group.add(mk);
+      pulse.push({ o: mk, ph: d.x + d.y });
+      reg(mk, ST.dist);
     });
 
-    // ---- settlement ordered grid ----
-    const settleFrame = new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(9.2, 6, 0.4)),
-      new THREE.LineBasicMaterial({ color: 0xf5f4f0, transparent: true, opacity: 0.25 })
+    // ===== 6) SETTLEMENT — construct that stacks up (loop) =====
+    const board = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(9, 6, 0.4)),
+      new THREE.LineBasicMaterial({ color: 0xf5f4f0, transparent: true, opacity: 0.3 })
     );
-    settleFrame.position.z = STAGES.settlement;
-    group.add(settleFrame);
-
-    // ===== per-stage symbols =====
-
-    // 1) Ingest — intake funnel (wide mouth faces incoming data)
-    const funnel = new THREE.LineSegments(
-      new THREE.WireframeGeometry(new THREE.ConeGeometry(3.4, 3.6, 6, 1, true)),
-      new THREE.LineBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.28 })
+    board.position.z = ST.settle;
+    group.add(board);
+    reg(board, ST.settle);
+    // the construct (instanced cubes that fill up over time)
+    const tex = makeGridTex();
+    const SCC = 6;
+    const SCR = 4;
+    const SCD = 2;
+    const constructSlots: THREE.Vector3[] = [];
+    for (let d = 0; d < SCD; d++)
+      for (let r = 0; r < SCR; r++)
+        for (let c = 0; c < SCC; c++)
+          constructSlots.push(
+            new THREE.Vector3(
+              (c - (SCC - 1) / 2) * 1.25,
+              (r - (SCR - 1) / 2) * 1.25,
+              ST.settle - 0.6 - d * 1.25
+            )
+          );
+    const construct = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false }),
+      constructSlots.length
     );
-    funnel.position.z = STAGES.ingest;
-    funnel.rotation.x = -Math.PI / 2;
-    group.add(funnel);
-    spinners.push({ mesh: funnel, ax: "y", sp: 0.25 });
+    construct.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    group.add(construct);
 
-    // 2) Sequencing — ascending sorted bars
-    const seqBars: THREE.Mesh[] = [];
-    for (let i = 0; i < 7; i++) {
-      const h = 0.7 + i * 0.45;
-      const barGeo = new THREE.BoxGeometry(0.34, h, 0.34);
-      const bar = new THREE.Mesh(
-        barGeo,
-        new THREE.MeshBasicMaterial({ color: 0xc9a86a, transparent: true, opacity: 0.14, depthWrite: false })
-      );
-      const x = (i - 3) * 0.62;
-      bar.position.set(x, h / 2 - 1.4, STAGES.order);
-      bar.userData.baseY = h / 2 - 1.4;
-      bar.userData.idx = i;
-      group.add(bar);
-      const edges = new THREE.LineSegments(
-        new THREE.EdgesGeometry(barGeo),
-        new THREE.LineBasicMaterial({ color: 0xe6c88a, transparent: true, opacity: 0.55 })
-      );
-      bar.add(edges);
-      seqBars.push(bar);
-    }
-
-    // 4) Orchestration — interlocking control rings around the core
-    const orchRings = [
-      { rot: [0, 0, 0], sp: 0.6, ax: "x" as const },
-      { rot: [Math.PI / 2, 0, 0], sp: -0.5, ax: "y" as const },
-      { rot: [0, Math.PI / 2, Math.PI / 4], sp: 0.4, ax: "z" as const },
-    ];
-    orchRings.forEach((o) => {
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(1.7, 0.03, 10, 64),
-        new THREE.MeshBasicMaterial({ color: 0xf5f4f0, transparent: true, opacity: 0.4 })
-      );
-      ring.position.z = STAGES.orchestrator;
-      ring.rotation.set(o.rot[0], o.rot[1], o.rot[2]);
-      group.add(ring);
-      spinners.push({ mesh: ring, ax: o.ax, sp: o.sp });
-    });
-
-    // 5) Distribution — fan-out routing arrows
-    const upY = new THREE.Vector3(0, 1, 0);
-    dests.forEach((d) => {
-      const dir = new THREE.Vector3(d.x, d.y, 0).normalize();
-      const cone = new THREE.Mesh(
-        new THREE.ConeGeometry(0.18, 0.5, 10),
-        new THREE.MeshBasicMaterial({ color: 0xc9a86a })
-      );
-      cone.position.set(d.x * 0.62, d.y * 0.62, STAGES.distribution);
-      cone.quaternion.setFromUnitVectors(upY, dir);
-      group.add(cone);
-      pulses.push({ mesh: cone, phase: d.x + d.y });
-    });
-
-    // 6) Settlement — confirmation seal (✓ inside a ring)
-    const seal = new THREE.Group();
-    seal.position.z = STAGES.settlement;
-    const sealRing = new THREE.Mesh(
-      new THREE.TorusGeometry(1.4, 0.05, 12, 64),
-      new THREE.MeshBasicMaterial({ color: 0xf5f4f0, transparent: true, opacity: 0.55 })
-    );
-    seal.add(sealRing);
-    const checkMat = new THREE.MeshBasicMaterial({ color: 0xe6c88a });
-    const c1 = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.16, 0.16), checkMat);
-    c1.position.set(-0.45, -0.18, 0);
-    c1.rotation.z = -Math.PI / 4;
-    seal.add(c1);
-    const c2 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.16, 0.16), checkMat);
-    c2.position.set(0.28, 0.1, 0);
-    c2.rotation.z = Math.PI / 3.2;
-    seal.add(c2);
-    group.add(seal);
-    pulses.push({ mesh: seal as unknown as THREE.Mesh, phase: 1.5 });
-
-    // ---- data particles ----
-    const COUNT = 220;
-    const packets: P[] = [];
+    // ===== data cubes (the flowing Rubik packets) =====
+    const COUNT = 90;
+    const pkts: Pkt[] = [];
     for (let i = 0; i < COUNT; i++) {
       const ang = Math.random() * Math.PI * 2;
-      const rad = 3 + Math.random() * 5;
+      const rad = 3 + Math.random() * 6;
       const slot = slots[i % slots.length];
       const dest = dests[i % dests.length];
-      packets.push({
+      pkts.push({
         t: i / COUNT,
-        speed: 0.045 + Math.random() * 0.04,
+        sp: 0.03 + Math.random() * 0.025,
         seed: Math.random() * 100,
         ox: Math.cos(ang) * rad,
         oy: Math.sin(ang) * rad,
-        sx: slot.x,
-        sy: slot.y,
-        dx: dest.x + (Math.random() - 0.5) * 0.6,
-        dy: dest.y + (Math.random() - 0.5) * 0.6,
-        base: 0.16 + Math.random() * 0.1,
-        rejected: Math.random() < 0.14,
+        lx: slot.x,
+        ly: slot.y,
+        dx: dest.x,
+        dy: dest.y,
+        bad: Math.random() < 0.18,
+        dead: false,
       });
     }
-    const inst = new THREE.InstancedMesh(
+    const cubes = new THREE.InstancedMesh(
       new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshBasicMaterial({
-        map: makeGridTex(),
-        toneMapped: false,
-        transparent: true,
-        depthWrite: false,
-      }),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false }),
       COUNT
     );
-    inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    group.add(inst);
+    cubes.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    group.add(cubes);
 
-    return { group, spinners, pulses, inst, packets, lock, lockMats, flashState, seqBars };
+    // ===== debris pool (red, for dissolving malicious cubes) =====
+    const DCOUNT = 200;
+    const debris = Array.from({ length: DCOUNT }, () => ({
+      x: 0,
+      y: 0,
+      z: 0,
+      vx: 0,
+      vy: 0,
+      vz: 0,
+      life: 0,
+    }));
+    let dHead = 0;
+    const spawnDebris = (x: number, y: number, z: number) => {
+      for (let n = 0; n < 9; n++) {
+        const d = debris[dHead % DCOUNT];
+        dHead++;
+        d.x = x;
+        d.y = y;
+        d.z = z;
+        d.vx = (Math.random() - 0.5) * 6;
+        d.vy = (Math.random() - 0.5) * 6;
+        d.vz = (Math.random() - 0.5) * 6;
+        d.life = 0.8 + Math.random() * 0.5;
+      }
+    };
+    const debrisMesh = new THREE.InstancedMesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshBasicMaterial({
+        color: 0xc0392b,
+        transparent: true,
+        toneMapped: false,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+      DCOUNT
+    );
+    debrisMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    group.add(debrisMesh);
+
+    return {
+      group,
+      spin,
+      pulse,
+      focus,
+      lock,
+      lockMats,
+      cubes,
+      pkts,
+      construct,
+      constructSlots,
+      debris,
+      debrisMesh,
+      spawnDebris,
+      flash: { v: 0 },
+      settleState: { placed: 0, full: 0 },
+    };
   }, []);
 
   useFrame((state, delta) => {
+    const dt = Math.min(delta, 0.05);
     const t = state.clock.elapsedTime;
     const p = progressRef.current ?? 0;
-    const { spinners, pulses, inst, packets, lock, lockMats, flashState, seqBars } =
-      built;
+    const cam = state.camera;
+    const camZ = lerp(CAM_START, CAM_END, p);
+    const focusZ = camZ - FOCUS_AHEAD;
+    const b = built;
 
-    spinners.forEach((s) => {
-      s.mesh.rotation[s.ax] += delta * s.sp;
-    });
-    pulses.forEach(({ mesh, phase }) => {
-      mesh.scale.setScalar(1 + Math.sin(t * 2.4 + phase) * 0.18);
-    });
-    // sequencing bars bob in order (sorting motion)
-    seqBars.forEach((b) => {
-      b.position.y =
-        (b.userData.baseY as number) + Math.sin(t * 3 + b.userData.idx * 0.5) * 0.12;
+    // spinners + pulses
+    b.spin.forEach((s) => (s.o.rotation[s.ax] += dt * s.sp));
+    b.pulse.forEach((q) => q.o.scale.setScalar(1 + Math.sin(t * 2.4 + q.ph) * 0.18));
+
+    // focus-dim: only the current section stays bright
+    b.focus.forEach((f) => {
+      const near = 1 - clamp((Math.abs(f.z - focusZ) - 9) / 22, 0, 1);
+      f.m.opacity = f.base * (0.12 + near * 0.88);
     });
 
-    // particle orchestration: chaos → ordered lattice → distribution → settled
-    for (let i = 0; i < packets.length; i++) {
-      const pk = packets[i];
-      pk.t += pk.speed * delta;
-      if (pk.t >= 1) {
-        pk.t -= 1;
-        pk.rejected = Math.random() < 0.14;
+    // ===== flowing data cubes =====
+    let flash = b.flash.v;
+    for (let i = 0; i < b.pkts.length; i++) {
+      const pk = b.pkts[i];
+      pk.t += pk.sp * dt;
+      if (pk.t >= 1 || pk.dead) {
+        pk.t = 0;
+        pk.dead = false;
+        pk.bad = Math.random() < 0.18;
       }
-      const s = pk.t;
-      const z = Z_START - s * RANGE;
+      const z = lerp(SPAWN, ST.settle, pk.t);
 
-      const orderMix = ss(S_ORDER_A, S_ORDER_B, s);
-      const distMix = ss(S_DIST_A, S_DIST_B, s);
-      let x = lerp(lerp(pk.ox, pk.sx, orderMix), pk.dx, distMix);
-      let y = lerp(lerp(pk.oy, pk.sy, orderMix), pk.dy, distMix);
-      // settle back into ordered grid
-      const settleMix = ss(S_DIST_B, S_SETTLE, s);
-      x = lerp(x, pk.sx, settleMix);
-      y = lerp(y, pk.sy, settleMix);
-
-      let scale = pk.base;
-
-      if (pk.rejected && s > S_SEC - 0.02) {
-        const k = clamp((s - (S_SEC - 0.02)) / 0.06, 0, 1);
-        const out = 1 + k * 1.8;
-        x *= out;
-        y *= out;
-        col.copy(C_RED);
-        scale = pk.base * (1 - k * 0.9);
-        if (s < S_SEC + 0.04) flashState.v = 1; // padlock blocks it
-        if (s > S_SEC + 0.06) {
-          pk.t = 0;
-          pk.rejected = Math.random() < 0.14;
-        }
-      } else if (s < S_ORDER_B) {
-        col.copy(C_GRAY);
-      } else if (s < S_SEC) {
-        col.lerpColors(C_GRAY, C_GOLD, ss(S_ORDER_B, S_SEC, s));
-      } else if (s < S_ORCH) {
-        col.copy(C_GOLDB);
-        scale = pk.base * (1 + Math.sin(t * 9 + pk.seed) * 0.15);
-      } else if (s < S_DIST_B) {
-        col.copy(C_GOLDB);
-      } else {
-        col.lerpColors(C_GOLDB, C_BONE, ss(S_DIST_B, S_SETTLE, s));
+      // malicious → dissolve at the security gate
+      if (pk.bad && z <= ST.security) {
+        b.spawnDebris(
+          lerp(pk.ox, pk.lx, 1) * 0.4,
+          lerp(pk.oy, pk.ly, 1) * 0.4,
+          z
+        );
+        flash = 1;
+        pk.dead = true;
+        dummy.scale.setScalar(0.0001);
+        dummy.position.set(0, 0, 9999);
+        dummy.updateMatrix();
+        b.cubes.setMatrixAt(i, dummy.matrix);
+        continue;
       }
 
-      const fade = ss(0, 0.03, s) * (1 - ss(0.97, 1, s));
-      scale *= fade;
+      const mO = ss(SPAWN, ST.order, SPAWN - (SPAWN - z)); // chaos→order
+      const orderMix = ss(0, 1, clamp((SPAWN - z) / (SPAWN - ST.order), 0, 1));
+      const distMix = clamp((ST.core - z) / (ST.core - ST.dist), 0, 1);
+      const settleMix = clamp((ST.dist - z) / (ST.dist - ST.settle), 0, 1);
+      void mO;
 
+      let x = lerp(lerp(pk.ox, pk.lx, orderMix), pk.dx, distMix);
+      let y = lerp(lerp(pk.oy, pk.ly, orderMix), pk.dy, distMix);
+      // converge toward centre to enter the construct at settlement
+      x = lerp(x, pk.lx * 0.6, settleMix);
+      y = lerp(y, pk.ly * 0.6, settleMix);
+
+      // colour by stage
+      if (z > ST.order) col.copy(C_GRAY); // chaos
+      else if (z > ST.security) col.lerpColors(C_GRAY, C_GOLD, orderMix); // sorted
+      else if (z > ST.core) col.copy(C_GOLDB); // passed security
+      else col.lerpColors(C_GOLDB, C_BONE, clamp((ST.core - z) / 6, 0, 1)); // weighted
+
+      const scale = 0.42 * ss(0, 0.04, pk.t) * (1 - ss(0.96, 1, pk.t));
       dummy.position.set(x, y, z);
       dummy.rotation.set(t * 0.5 + pk.seed, t * 0.7 + pk.seed * 1.3, t * 0.3);
       dummy.scale.setScalar(Math.max(0.0001, scale));
       dummy.updateMatrix();
-      inst.setMatrixAt(i, dummy.matrix);
-      inst.setColorAt(i, col);
+      b.cubes.setMatrixAt(i, dummy.matrix);
+      b.cubes.setColorAt(i, col);
     }
+    b.cubes.instanceMatrix.needsUpdate = true;
+    if (b.cubes.instanceColor) b.cubes.instanceColor.needsUpdate = true;
+    b.flash.v = flash * 0.9;
+
+    // ===== debris =====
     dummy.rotation.set(0, 0, 0);
-    inst.instanceMatrix.needsUpdate = true;
-    if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    for (let i = 0; i < b.debris.length; i++) {
+      const d = b.debris[i];
+      let sc = 0.0001;
+      if (d.life > 0) {
+        d.life -= dt;
+        d.x += d.vx * dt;
+        d.y += d.vy * dt;
+        d.z += d.vz * dt;
+        d.vx *= 0.94;
+        d.vy *= 0.94;
+        d.vz *= 0.94;
+        sc = clamp(d.life, 0, 1) * 0.22;
+      }
+      dummy.position.set(d.x, d.y, d.z);
+      dummy.scale.setScalar(Math.max(0.0001, sc));
+      dummy.updateMatrix();
+      b.debrisMesh.setMatrixAt(i, dummy.matrix);
+    }
+    b.debrisMesh.instanceMatrix.needsUpdate = true;
 
-    // padlock: idle gold glow, flashes red while blocking a rejected tx
-    const f = flashState.v;
-    lockMats.forEach(({ mat, base }) => {
-      mat.color.copy(base).lerp(C_RED, f * 0.85);
-      mat.opacity = base.equals(C_GOLD) ? 0.12 : 0.85 + f * 0.15;
+    // ===== settlement construct: stack up, then loop =====
+    const cs = b.settleState;
+    if (cs.full > 0) {
+      cs.full -= dt;
+      if (cs.full <= 0) {
+        cs.placed = 0;
+        cs.full = 0;
+      }
+    } else {
+      cs.placed += dt * 3.2; // fill rate
+      if (cs.placed >= b.constructSlots.length) {
+        cs.placed = b.constructSlots.length;
+        cs.full = 2.5; // hold the finished construct, then reset
+      }
+    }
+    for (let i = 0; i < b.constructSlots.length; i++) {
+      const appear = clamp(cs.placed - i, 0, 1);
+      const sl = b.constructSlots[i];
+      dummy.position.copy(sl);
+      dummy.rotation.set(0, 0, 0);
+      dummy.scale.setScalar(Math.max(0.0001, appear * 1.0));
+      dummy.updateMatrix();
+      b.construct.setMatrixAt(i, dummy.matrix);
+    }
+    b.construct.instanceMatrix.needsUpdate = true;
+
+    // padlock flash on block
+    const f = b.flash.v;
+    b.lockMats.forEach(({ m, base }) => {
+      (m.color as THREE.Color).copy(base).lerp(C_RED, f * 0.9);
     });
-    lock.rotation.y = Math.sin(t * 0.4) * 0.3;
-    lock.position.y = Math.sin(t * 0.8) * 0.15;
-    lock.scale.setScalar(1.5 * (1 + Math.sin(t * 2) * 0.03 + f * 0.18));
-    flashState.v *= 0.9;
+    b.lock.scale.setScalar(1.4 * (1 + Math.sin(t * 2) * 0.03 + f * 0.2));
 
-    // camera stays ON the pipeline line; scroll = forward, drag = look around
+    // ===== camera: forward on the line + first-person look =====
     const o = orbit.current;
     o.yaw = lerp(o.yaw, o.tyaw, 0.1);
     o.pitch = lerp(o.pitch, o.tpitch, 0.1);
-
-    const camZ = lerp(22, -56, p);
-    const cam = state.camera;
     cam.position.x = lerp(cam.position.x, 0, 0.06);
-    cam.position.y = lerp(cam.position.y, 1.4, 0.06);
+    cam.position.y = lerp(cam.position.y, 1.2, 0.06);
     cam.position.z = lerp(cam.position.z, camZ, 0.08);
-
-    // first-person look direction (default looks down the pipeline, -Z)
     const cp = Math.cos(o.pitch);
     cam.lookAt(
       cam.position.x + Math.sin(o.yaw) * cp * 16,
@@ -601,11 +549,11 @@ export default function TransactionFlow({
   return (
     <Canvas
       className="!absolute inset-0"
-      camera={{ position: [0, 2.4, 22], fov: 50, far: 220 }}
+      camera={{ position: [0, 1.2, 20], fov: 50, far: 220 }}
       dpr={[1, 1.75]}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
     >
-      <fog attach="fog" args={[0x0a0a0b, 16, 72]} />
+      <fog attach="fog" args={[0x0a0a0b, 14, 60]} />
       <Scene progressRef={progressRef} />
     </Canvas>
   );
