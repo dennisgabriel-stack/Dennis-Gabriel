@@ -37,10 +37,10 @@ function Ambient({ selRef }: { selRef: MutableRefObject<number> }) {
     const root = new THREE.Group();
 
     // ---- starfield (always present, tinted to theme) ----
-    const SN = 1400;
+    const SN = 1800;
     const pos = new Float32Array(SN * 3);
     for (let i = 0; i < SN; i++) {
-      const r = 8 + Math.random() * 16;
+      const r = 10 + Math.random() * 30;
       const th = Math.random() * Math.PI * 2;
       const ph = Math.acos(2 * Math.random() - 1);
       pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
@@ -61,7 +61,7 @@ function Ambient({ selRef }: { selRef: MutableRefObject<number> }) {
     root.add(stars);
 
     // ===== motif 0 — L1: flowing UI wave surface =====
-    const waveGeo = new THREE.PlaneGeometry(20, 14, 36, 26);
+    const waveGeo = new THREE.PlaneGeometry(44, 20, 56, 28);
     const waveMat = new THREE.MeshBasicMaterial({
       color: 0xe6c88a,
       wireframe: true,
@@ -110,10 +110,10 @@ function Ambient({ selRef }: { selRef: MutableRefObject<number> }) {
 
     // ===== motif 2 — L3: descending data streams =====
     const streams = new THREE.Group();
-    const SC = 90;
+    const SC = 150;
     const sData = Array.from({ length: SC }, () => ({
-      x: (Math.random() - 0.5) * 14,
-      z: (Math.random() - 0.5) * 8,
+      x: (Math.random() - 0.5) * 34,
+      z: (Math.random() - 0.5) * 12,
       t: Math.random(),
       sp: 0.25 + Math.random() * 0.4,
     }));
@@ -257,11 +257,11 @@ export default function LayerAmbient({
   return (
     <Canvas
       className="!absolute inset-0"
-      camera={{ position: [0, 1, 12], fov: 55 }}
+      camera={{ position: [0, 1, 13], fov: 70 }}
       dpr={[1, 1.6]}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
     >
-      <fog attach="fog" args={[0x0a0a0b, 6, 30]} />
+      <fog attach="fog" args={[0x0a0a0b, 8, 40]} />
       <Ambient selRef={selRef} />
     </Canvas>
   );

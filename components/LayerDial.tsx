@@ -74,7 +74,20 @@ export default function LayerDial({
     settled: true,
     cx: 0,
     cy: 0,
+    target: null as number | null,
   });
+
+  // rotate the wheel to a chosen layer (click-to-select), shortest path
+  const goTo = (i: number) => {
+    const st = s.current;
+    const k0 = Math.round(st.angle / 90);
+    let d = ((i - (((k0 % 4) + 4) % 4)) + 4) % 4;
+    if (d === 3) d = -1;
+    st.target = (k0 + d) * 90;
+    st.vel = 0;
+    st.dragging = false;
+    emit("ux-woosh");
+  };
 
   useEffect(() => {
     const knob = knobRef.current!;
@@ -90,6 +103,7 @@ export default function LayerDial({
       st.cy = r.top + r.height / 2;
       st.dragging = true;
       st.vel = 0;
+      st.target = null;
       st.lastPointer = angleAt(e.clientX, e.clientY);
       st.lastMove = performance.now();
       wrap.setPointerCapture?.(e.pointerId);
@@ -117,21 +131,30 @@ export default function LayerDial({
 
     let raf = 0;
     const frame = () => {
-      if (!st.dragging) {
-        if (Math.abs(st.vel) > 0.25) {
-          st.angle += st.vel;
-          st.vel *= 0.97; // friction → physics spin
-        } else {
-          const target = Math.round(st.angle / 90) * 90;
-          st.angle += (target - st.angle) * 0.18;
-          if (Math.abs(target - st.angle) < 0.2 && !st.settled) {
-            st.angle = target;
+      if (st.dragging) {
+        if (performance.now() - st.lastMove > 90) st.vel = 0;
+      } else if (st.target !== null) {
+        // animate to a clicked layer
+        st.angle += (st.target - st.angle) * 0.16;
+        if (Math.abs(st.target - st.angle) < 0.3) {
+          st.angle = st.target;
+          st.target = null;
+          if (!st.settled) {
             st.settled = true;
-            emit("ux-textin"); // card locks in
+            emit("ux-textin");
           }
         }
-      } else if (performance.now() - st.lastMove > 90) {
-        st.vel = 0;
+      } else if (Math.abs(st.vel) > 0.25) {
+        st.angle += st.vel;
+        st.vel *= 0.97; // friction → physics spin
+      } else {
+        const target = Math.round(st.angle / 90) * 90;
+        st.angle += (target - st.angle) * 0.18;
+        if (Math.abs(target - st.angle) < 0.2 && !st.settled) {
+          st.angle = target;
+          st.settled = true;
+          emit("ux-textin"); // card locks in
+        }
       }
 
       const det = (((Math.round(st.angle / 90) % 4) + 4) % 4);
@@ -220,30 +243,35 @@ export default function LayerDial({
           />
         </svg>
 
-        {/* outer fixed ticks L1-L4 (top/right/bottom/left) */}
+        {/* clickable L1-L4 fields around the wheel (top/right/bottom/left) */}
         {LAYERS.map((l, i) => {
           const a = i * 90; // 0 top, 90 right, 180 bottom, 270 left
           const on = i === selected;
           return (
-            <div
+            <button
               key={l.tag}
-              className="absolute left-1/2 top-1/2"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => goTo(i)}
+              aria-label={`${l.tag} ${l.name}`}
+              className="absolute left-1/2 top-1/2 z-30 flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 hover:scale-110"
               style={{
-                transform: `translate(-50%,-50%) rotate(${a}deg) translateY(-168px) rotate(${-a}deg)`,
+                transform: `translate(-50%,-50%) rotate(${a}deg) translateY(-150px) rotate(${-a}deg)`,
+                background: on ? `${l.accent}1f` : "transparent",
+                boxShadow: on ? `0 0 18px ${l.accent}55` : "none",
               }}
             >
               <span
-                className="font-display text-lg font-bold transition-all duration-300"
+                className="font-display text-lg font-bold"
                 style={{
-                  color: on ? l.accent : "#55555c",
+                  color: on ? l.accent : "#6a6a72",
                   textShadow: on ? `0 0 16px ${l.accent}` : "none",
-                  transform: on ? "scale(1.25)" : "scale(1)",
+                  transform: on ? "scale(1.2)" : "scale(1)",
                   display: "inline-block",
                 }}
               >
                 {l.tag}
               </span>
-            </div>
+            </button>
           );
         })}
 
@@ -303,26 +331,27 @@ export default function LayerDial({
               boxShadow: `0 0 14px ${layer.accent}`,
             }}
           />
-          {/* hub */}
-          <div
-            className="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full"
-            style={{
-              background: "radial-gradient(circle, #16161b, #0a0a0b)",
-              border: `1px solid ${layer.accent}40`,
-              boxShadow: `0 0 24px ${layer.accent}33`,
-            }}
+        </div>
+
+        {/* hub — NOT rotating, always readable */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 z-20 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full transition-colors duration-500"
+          style={{
+            background: "radial-gradient(circle, #16161b, #0a0a0b)",
+            border: `1px solid ${layer.accent}55`,
+            boxShadow: `0 0 28px ${layer.accent}40`,
+          }}
+        >
+          <span
+            className="font-display text-3xl font-black"
+            style={{ color: layer.accent, textShadow: `0 0 14px ${layer.accent}` }}
           >
-            <span
-              className="font-display text-2xl font-bold"
-              style={{ color: layer.accent, textShadow: `0 0 12px ${layer.accent}` }}
-            >
-              {layer.tag}
-            </span>
-          </div>
+            {layer.tag}
+          </span>
         </div>
 
         <p className="absolute -bottom-9 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] uppercase tracking-[0.3em] text-muted">
-          Drehen · Schwung geben
+          Drehen · Tippen · Schwung geben
         </p>
       </div>
 
