@@ -21,7 +21,7 @@ export default function TechCubesSection() {
               alt=""
               fill
               sizes="100vw"
-              className="object-cover object-[72%_28%] opacity-55"
+              className="object-cover object-[72%_12%] opacity-55"
               priority={false}
             />
             {/* fade toward the text on the left */}
@@ -55,7 +55,7 @@ export default function TechCubesSection() {
         </div>
       </div>
 
-      <div className="relative mt-8 h-[68vh] w-full md:h-[74vh]">
+      <div className="relative -mt-10 h-[68vh] w-full md:-mt-6 md:h-[74vh]">
         <TechCubes />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-ink to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
