@@ -583,8 +583,24 @@ function Scene({ progressRef }: { progressRef: MutableRefObject<number> }) {
     const o = orbit.current;
     o.yaw = lerp(o.yaw, o.tyaw, 0.1);
     o.pitch = lerp(o.pitch, o.tpitch, 0.1);
+    // portrait/mobile: drop the camera near the content's eye-line so the
+    // pipeline sits vertically centred instead of pooling at the bottom of
+    // the tall frame (keeps the section→section transition from leaving a
+    // big empty band on top). Desktop framing is unchanged.
+    const portrait = state.size.height > state.size.width;
+    const camYTarget = portrait ? 0.15 : 1.2;
     cam.position.x = lerp(cam.position.x, 0, 0.06);
-    cam.position.y = lerp(cam.position.y, 1.2, 0.06);
+    cam.position.y = lerp(cam.position.y, camYTarget, 0.06);
+
+    // portrait/mobile entry glide: while the section is scrolling up into the
+    // sticky position, only the TOP slice of the canvas is on screen — which
+    // is empty sky above the pipeline. Lift the whole scene by how far the
+    // canvas top still sits below the viewport top, so the pipeline rides up
+    // into that visible slice and settles to centre as it locks in. Removes
+    // the dead black band at the About → On-Chain seam. Desktop = no lift.
+    const rectTop = gl.domElement.getBoundingClientRect().top;
+    const enter = portrait ? clamp(rectTop / state.size.height, 0, 1) : 0;
+    b.group.position.y = lerp(b.group.position.y, enter * 6.5, 0.15);
     cam.position.z = lerp(cam.position.z, camZ, 0.08);
     const cp = Math.cos(o.pitch);
     cam.lookAt(

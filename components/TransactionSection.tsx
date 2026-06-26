@@ -125,7 +125,7 @@ export default function TransactionSection() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-ink to-transparent" />
 
         {/* section heading */}
-        <div className="absolute left-6 top-8 z-20 md:left-10">
+        <div className="absolute left-6 top-20 z-20 md:left-10 md:top-8">
           <p className="text-[10px] uppercase tracking-[0.4em] text-muted">
             On-Chain · Orchestrierung
           </p>
