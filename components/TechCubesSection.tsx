@@ -87,20 +87,18 @@ export default function TechCubesSection() {
       <div className="relative z-30 mx-auto max-w-7xl px-6 md:px-10">
         {/* thinking-pose portrait (cutout) behind the heading, like the sketch */}
         <div className="relative">
-          <div className="pointer-events-none absolute inset-x-0 -top-16 z-0 h-[460px] overflow-hidden md:-top-24 md:h-[600px]">
+          <div className="pointer-events-none absolute left-0 right-0 -top-12 z-0 h-[280px] overflow-hidden md:-top-16 md:h-[400px]">
             <Image
               src="/images/stack-person.png"
               alt=""
               fill
               sizes="100vw"
-              className="object-contain object-[center_top] opacity-55 md:object-[72%_top]"
+              className="object-contain object-[left_top] opacity-50 md:object-[22%_top]"
               priority={false}
             />
-            {/* darken toward the text (left) so the heading stays readable */}
-            <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/55 to-transparent" />
-            {/* feather every edge into the background */}
-            <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-ink to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-ink to-transparent" />
+            {/* keep heading readable + feather into the background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/20 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink to-transparent" />
           </div>
 
           <div className="relative z-10">
