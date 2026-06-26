@@ -93,12 +93,22 @@ function RailItem({ i, p }: { i: number; p: MotionValue<number> }) {
 export default function TransactionSection() {
   const ref = useRef<HTMLDivElement>(null);
   const progress = useRef(0);
+  const prev = useRef(0);
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end end"],
   });
   useMotionValueEvent(scrollYProgress, "change", (v) => {
     progress.current = v;
+    // woosh each time we fly through a stage boundary
+    const p0 = prev.current;
+    for (const c of CENTERS) {
+      if ((p0 < c && v >= c) || (p0 > c && v <= c)) {
+        window.dispatchEvent(new CustomEvent("ux-woosh"));
+        break;
+      }
+    }
+    prev.current = v;
   });
 
   return (

@@ -21,6 +21,7 @@ type Engine = {
   master: GainNode;
   reverb: ConvolverNode;
   reverbGain: GainNode;
+  noise: AudioBuffer;
   pad?: { gain: GainNode; stop: () => void };
 };
 
@@ -50,7 +51,11 @@ export default function SoundManager() {
     reverb.connect(reverbGain);
     reverbGain.connect(master);
 
-    eng.current = { ctx, master, reverb, reverbGain };
+    const noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const nd = noise.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+
+    eng.current = { ctx, master, reverb, reverbGain, noise };
     return eng.current;
   };
 
@@ -97,6 +102,39 @@ export default function SoundManager() {
   };
 
   const playClick = () => chime(659.25, 0.08); // E5 majestic chime
+
+  /* woosh — filtered noise sweep, for flying through layers */
+  const playWoosh = () => {
+    const e = eng.current;
+    if (!e) return;
+    const t = e.ctx.currentTime;
+    const src = e.ctx.createBufferSource();
+    src.buffer = e.noise;
+    src.loop = true;
+    const bp = e.ctx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.Q.value = 1.3;
+    bp.frequency.setValueAtTime(320, t);
+    bp.frequency.exponentialRampToValueAtTime(3400, t + 0.42);
+    const g = e.ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.2, t + 0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    src.connect(bp);
+    bp.connect(g);
+    g.connect(e.master);
+    g.connect(e.reverb);
+    src.start(t);
+    src.stop(t + 0.7);
+  };
+
+  /* crystalline cluster burst for taps */
+  const playBurst = () => {
+    [1046.5, 1318.51, 1567.98, 2093.0].forEach((f, i) =>
+      voice(f, 0.22, "sine", 0.055, i * 0.022)
+    );
+    voice(523.25, 0.32, "triangle", 0.05);
+  };
 
   /* a low, glorious swell when the cathedral opens */
   const playEnter = () => {
@@ -184,15 +222,21 @@ export default function SoundManager() {
     };
     const onHover = () => playHover();
     const onClick = () => playClick();
+    const onWoosh = () => playWoosh();
+    const onBurst = () => playBurst();
     window.addEventListener("pointerover", over);
     window.addEventListener("click", click);
     window.addEventListener("ux-hover", onHover);
     window.addEventListener("ux-click", onClick);
+    window.addEventListener("ux-woosh", onWoosh);
+    window.addEventListener("ux-burst", onBurst);
     return () => {
       window.removeEventListener("pointerover", over);
       window.removeEventListener("click", click);
       window.removeEventListener("ux-hover", onHover);
       window.removeEventListener("ux-click", onClick);
+      window.removeEventListener("ux-woosh", onWoosh);
+      window.removeEventListener("ux-burst", onBurst);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled]);

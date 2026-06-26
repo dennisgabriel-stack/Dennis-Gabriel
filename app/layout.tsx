@@ -3,6 +3,7 @@ import { Space_Grotesk, Inter, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import SoundManager from "@/components/sound/SoundManager";
+import TapBurst from "@/components/TapBurst";
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body className="font-sans antialiased grain">
         <SmoothScroll>{children}</SmoothScroll>
         <SoundManager />
+        <TapBurst />
       </body>
     </html>
   );
