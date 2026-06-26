@@ -75,3 +75,27 @@ body {
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(245, 244, 240, 0.07);
 }
+
+/* Shimmering animated gold text */
+.shimmer-gold {
+  background: linear-gradient(
+    110deg,
+    #9c8552 0%,
+    #c9a86a 25%,
+    #f5e6c0 50%,
+    #c9a86a 75%,
+    #9c8552 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-gold 3.5s linear infinite;
+}
+
+@keyframes shimmer-gold {
+  to {
+    background-position: -200% center;
+  }
+}

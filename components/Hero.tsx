@@ -56,7 +56,16 @@ export default function Hero() {
             Full-Stack · Blockchain · KI
           </motion.p>
 
-          <h1 className="mt-[36vh] font-display text-[15vw] font-bold leading-[0.86] tracking-tight md:mt-0 md:text-[10vw] lg:text-[8.5vw]">
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.9, ease }}
+            className="shimmer-gold mt-[36vh] mb-2 font-display text-base font-bold uppercase tracking-[0.35em] md:mt-0 md:text-lg"
+          >
+            Archangel//Dev
+          </motion.p>
+
+          <h1 className="font-display text-[15vw] font-bold leading-[0.86] tracking-tight md:text-[10vw] lg:text-[8.5vw]">
             <span className="reveal-line">
               <motion.span
                 initial={{ y: "110%" }}
