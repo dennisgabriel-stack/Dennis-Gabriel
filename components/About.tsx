@@ -138,20 +138,20 @@ export default function About() {
           style={{ opacity: textOpacity, y: textY, x: textX, filter: textFilter }}
           className="relative z-10 mr-auto max-w-xl px-6 md:px-10 md:pl-[13vw]"
         >
-          <p className="mb-6 text-xs uppercase tracking-[0.4em] text-gold">
+          <p className="mb-3 text-xs uppercase tracking-[0.4em] text-gold md:mb-6">
             Über mich
           </p>
-          <h2 className="font-display text-4xl font-bold leading-tight md:text-5xl">
+          <h2 className="font-display text-[2rem] font-bold leading-tight md:text-5xl">
             Entwickler mit dem Auge eines{" "}
             <span className="font-serif italic text-gold">Designers</span>.
           </h2>
-          <p className="mt-6 text-base leading-relaxed text-muted md:text-lg">
+          <p className="mt-4 text-sm leading-relaxed text-muted md:mt-6 md:text-lg">
             Ich verbinde technische Tiefe mit gestalterischem Anspruch. Von
             KI-gestützter Automatisierung über kreatives Grafik-Design bis hin zu
             vollständigen Echtzeit-Plattformen — ich denke ein Produkt vom Pixel
             bis zur Datenbank durch.
           </p>
-          <p className="mt-4 text-base leading-relaxed text-muted md:text-lg">
+          <p className="mt-3 text-sm leading-relaxed text-muted md:mt-4 md:text-lg">
             Mehrere produktive Websites und Anwendungen gebaut. Belegt durch{" "}
             <span className="text-bone">18 verifizierte Zertifikate</span> in
             verschiedensten Coding-Segmenten — von{" "}
@@ -160,7 +160,7 @@ export default function About() {
             vorlegbar.
           </p>
 
-          <div className="mt-8 grid grid-cols-2 gap-5 border-t border-bone/10 pt-6 md:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-4 border-t border-bone/10 pt-5 md:mt-8 md:gap-5 md:pt-6 md:grid-cols-4">
             {[
               { n: "18", l: "Verifizierte Zertifikate" },
               { n: "8+", l: "Sprachen (i18n)" },
