@@ -42,6 +42,7 @@ export default function Nav() {
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 md:px-10">
         <a
+          id="brand-logo"
           href="#top"
           onClick={(e) => {
             e.preventDefault();
