@@ -32,8 +32,18 @@ export default function SoundManager() {
   const eng = useRef<Engine | null>(null);
   const lastHover = useRef(0);
   const enabledRef = useRef(false);
+  const [showLabel, setShowLabel] = useState(false);
+  const firstRun = useRef(true);
   useEffect(() => {
     enabledRef.current = enabled;
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    // briefly flash the vertical label, then let it fade away
+    setShowLabel(true);
+    const tmr = setTimeout(() => setShowLabel(false), 1300);
+    return () => clearTimeout(tmr);
   }, [enabled]);
 
   /* lazily build the audio graph on first user gesture */
@@ -369,20 +379,22 @@ export default function SoundManager() {
 
   return (
     <>
-      {/* vertical animated state label above the button */}
+      {/* vertical label — briefly shimmers up on toggle, then fades away */}
       <div className="pointer-events-none fixed bottom-[5.25rem] right-[1.95rem] z-[69] flex justify-center">
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={enabled ? "on" : "off"}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="font-mono text-[10px] uppercase tracking-[0.3em] text-gold"
-            style={{ writingMode: "vertical-rl", textOrientation: "upright" }}
-          >
-            Sound {enabled ? "on" : "off"}
-          </motion.span>
+        <AnimatePresence>
+          {showLabel && (
+            <motion.span
+              key={enabled ? "on" : "off"}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="shimmer-gold font-mono text-[10px] uppercase tracking-[0.3em]"
+              style={{ writingMode: "vertical-rl", textOrientation: "upright" }}
+            >
+              Sound {enabled ? "on" : "off"}
+            </motion.span>
+          )}
         </AnimatePresence>
       </div>
 
