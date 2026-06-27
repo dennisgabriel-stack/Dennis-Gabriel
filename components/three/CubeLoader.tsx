@@ -14,12 +14,13 @@ const START = new THREE.Vector3(6.5, 5, 7.5); // where the corner flies in from
 const TARGET = new THREE.Vector3(HALF, HALF, HALF); // the empty corner slot
 
 // build a single Rubik cubelet (dark face + glowing gold edges)
+const BOX_DARK = new THREE.Color(0x121215);
+const BOX_LIT = new THREE.Color(0x6a5226);
+
 function cubelet(accent: number) {
   const g = new THREE.Group();
-  const box = new THREE.Mesh(
-    new THREE.BoxGeometry(0.96, 0.96, 0.96),
-    new THREE.MeshBasicMaterial({ color: 0x121215 })
-  );
+  const boxMat = new THREE.MeshBasicMaterial({ color: BOX_DARK.clone() });
+  const box = new THREE.Mesh(new THREE.BoxGeometry(0.96, 0.96, 0.96), boxMat);
   const edgeMat = new THREE.LineBasicMaterial({
     color: accent,
     transparent: true,
@@ -31,7 +32,7 @@ function cubelet(accent: number) {
     edgeMat
   );
   g.add(box, edges);
-  return { g, edgeMat, base: new THREE.Color(accent) };
+  return { g, edgeMat, boxMat, base: new THREE.Color(accent) };
 }
 
 function Scene({
@@ -44,6 +45,7 @@ function Scene({
   const built = useMemo(() => {
     const root = new THREE.Group();
     const edgeMats: { m: THREE.LineBasicMaterial; base: THREE.Color }[] = [];
+    const boxMats: THREE.MeshBasicMaterial[] = [];
 
     // 7 present cubelets (every corner except +,+,+)
     for (const x of [-1, 1])
@@ -54,6 +56,7 @@ function Scene({
           c.g.position.set(x * HALF, y * HALF, z * HALF);
           root.add(c.g);
           edgeMats.push({ m: c.edgeMat, base: c.base });
+          boxMats.push(c.boxMat);
         }
 
     // the missing corner cubelet (flies in at the end)
@@ -62,8 +65,9 @@ function Scene({
     corner.g.scale.setScalar(0.0001);
     root.add(corner.g);
     edgeMats.push({ m: corner.edgeMat, base: corner.base });
+    boxMats.push(corner.boxMat);
 
-    return { root, corner: corner.g, edgeMats };
+    return { root, corner: corner.g, edgeMats, boxMats };
   }, []);
 
   const st = useRef({ prog: 0, snapped: false, flash: 0 });
@@ -72,9 +76,11 @@ function Scene({
     const dt = Math.min(delta, 0.05);
     const t = state.clock.elapsedTime;
 
-    // slow majestic tumble
-    built.root.rotation.y += dt * 0.7;
-    built.root.rotation.x = 0.32 + Math.sin(t * 0.5) * 0.18;
+    // floating, slow majestic tumble
+    built.root.rotation.y += dt * 0.5;
+    built.root.rotation.x = 0.3 + Math.sin(t * 0.45) * 0.16;
+    built.root.position.y = Math.sin(t * 1.2) * 0.16; // gentle hover
+    built.root.position.x = Math.sin(t * 0.8) * 0.06;
 
     const s = st.current;
     if (phaseRef.current === "snap" && !s.snapped) {
@@ -97,6 +103,9 @@ function Scene({
       built.edgeMats.forEach(({ m, base }) => {
         m.color.copy(base).lerp(WHITE, f);
         m.opacity = 0.95 + f * 0.05;
+      });
+      built.boxMats.forEach((m) => {
+        m.color.copy(BOX_DARK).lerp(BOX_LIT, f); // faces light up
       });
       built.corner.scale.setScalar(1 + f * 0.28);
     }
