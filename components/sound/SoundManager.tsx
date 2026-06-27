@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 /* ---- synthesized impulse response for a vast, divine reverb ---- */
 function makeImpulse(ctx: AudioContext, seconds: number, decay: number) {
@@ -367,10 +368,28 @@ export default function SoundManager() {
   }, [enabled]);
 
   return (
-    <button
-      onClick={toggle}
-      aria-label={enabled ? "Sound ausschalten" : "Sound einschalten"}
-      className="group fixed bottom-6 right-6 z-[70] flex h-12 w-12 items-center justify-center rounded-full border border-gold/40 bg-ink/70 backdrop-blur-md transition-all duration-300 hover:border-gold hover:scale-105"
+    <>
+      {/* vertical animated state label above the button */}
+      <div className="pointer-events-none fixed bottom-[5.25rem] right-[1.95rem] z-[69] flex justify-center">
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={enabled ? "on" : "off"}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="font-mono text-[10px] uppercase tracking-[0.3em] text-gold"
+            style={{ writingMode: "vertical-rl", textOrientation: "upright" }}
+          >
+            Sound {enabled ? "on" : "off"}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+
+      <button
+        onClick={toggle}
+        aria-label={enabled ? "Sound ausschalten" : "Sound einschalten"}
+        className="group fixed bottom-6 right-6 z-[70] flex h-12 w-12 items-center justify-center rounded-full border border-gold/40 bg-ink/70 backdrop-blur-md transition-all duration-300 hover:border-gold hover:scale-105"
     >
       {/* pulsing invite ring when off */}
       {!ready && (
@@ -420,6 +439,7 @@ export default function SoundManager() {
           }
         }
       `}</style>
-    </button>
+      </button>
+    </>
   );
 }
