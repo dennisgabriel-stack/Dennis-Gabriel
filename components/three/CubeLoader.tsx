@@ -3,6 +3,7 @@
 import { useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { spawnBurst } from "../burst";
 
 const { lerp, clamp } = THREE.MathUtils;
 const G = 0.8; // grid spacing
@@ -12,6 +13,7 @@ const WHITE = new THREE.Color(0xffffff);
 const BOX_DARK = new THREE.Color(0x131318);
 const BOX_LIT = new THREE.Color(0x6a5226);
 const GOLD = new THREE.Color(0xc9a86a);
+const ORIGIN = new THREE.Vector3();
 
 const smoother = (x: number) => {
   x = clamp(x, 0, 1);
@@ -50,10 +52,9 @@ function cubelet(accent: number) {
 const STEP = 0.1;
 const DUR = 0.85;
 const CORNER_IN = 0.4;
-const PCOUNT = 280;
 
 function Scene({ onSnap }: { onSnap: () => void }) {
-  const dummy = useMemo(() => new THREE.Object3D(), []);
+  const vproj = useMemo(() => new THREE.Vector3(), []);
 
   const built = useMemo(() => {
     const root = new THREE.Group();
@@ -135,45 +136,7 @@ function Scene({ onSnap }: { onSnap: () => void }) {
     flyers.forEach((f, i) => (f.delay = CORNER_IN + i * STEP));
     const maxEnd = CORNER_IN + (flyers.length - 1) * STEP + DUR;
 
-    // ---- shimmering particle pool ----
-    const parts = Array.from({ length: PCOUNT }, () => ({
-      x: 0,
-      y: 0,
-      z: 0,
-      vx: 0,
-      vy: 0,
-      vz: 0,
-      life: 0,
-      max: 1,
-      seed: Math.random() * 6.28,
-    }));
-    const pMesh = new THREE.InstancedMesh(
-      new THREE.OctahedronGeometry(0.05),
-      new THREE.MeshBasicMaterial({
-        color: 0xe6c88a,
-        transparent: true,
-        opacity: 0.95,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      }),
-      PCOUNT
-    );
-    pMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    pMesh.frustumCulled = false;
-    root.add(pMesh);
-
-    return {
-      root,
-      frameMat,
-      edgeMats,
-      boxMats,
-      corners,
-      flyers,
-      maxEnd,
-      parts,
-      pMesh,
-      head: 0,
-    };
+    return { root, frameMat, edgeMats, boxMats, corners, flyers, maxEnd };
   }, []);
 
   const st = useRef({
@@ -185,31 +148,23 @@ function Scene({ onSnap }: { onSnap: () => void }) {
   });
   const acc = useMemo(() => new THREE.Vector3(), []);
 
-  const burst = (at: THREE.Vector3, n: number, power: number) => {
-    for (let k = 0; k < n; k++) {
-      const p = built.parts[built.head % PCOUNT];
-      built.head++;
-      p.x = at.x;
-      p.y = at.y;
-      p.z = at.z;
-      const th = Math.random() * Math.PI * 2;
-      const ph = Math.acos(2 * Math.random() - 1);
-      const sp = power * (0.5 + Math.random());
-      p.vx = Math.sin(ph) * Math.cos(th) * sp;
-      p.vy = Math.sin(ph) * Math.sin(th) * sp;
-      p.vz = Math.cos(ph) * sp;
-      p.max = 0.55 + Math.random() * 0.5;
-      p.life = p.max;
-      p.seed = Math.random() * 6.28;
-    }
-  };
-
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05);
     const t = state.clock.elapsedTime;
     const s = st.current;
     if (s.t0 < 0) s.t0 = t;
     const T = t - s.t0;
+
+    // spawn click-style shard particles at a cubelet's screen position
+    const screenBurst = (local: THREE.Vector3, count: number) => {
+      vproj.copy(local);
+      built.root.localToWorld(vproj);
+      vproj.project(state.camera);
+      const rect = state.gl.domElement.getBoundingClientRect();
+      const sx = rect.left + (vproj.x * 0.5 + 0.5) * rect.width;
+      const sy = rect.top + (-vproj.y * 0.5 + 0.5) * rect.height;
+      spawnBurst(sx, sy, count);
+    };
 
     // slow tumble
     built.root.rotation.y += dt * 0.45;
@@ -236,7 +191,7 @@ function Scene({ onSnap }: { onSnap: () => void }) {
         f.g.scale.setScalar(1);
         f.g.rotation.set(0, 0, 0);
         emit("ux-tick");
-        burst(f.target, 9, 1.5); // shimmer where it locks in
+        screenBurst(f.target, 7); // click-style shards where it locks in
         // soft impulse into the recoil spring (inbound direction)
         s.recVel.addScaledVector(f.dir, 0.55);
       }
@@ -247,7 +202,7 @@ function Scene({ onSnap }: { onSnap: () => void }) {
       s.snapped = true;
       s.flash = 1;
       emit("ux-klack");
-      burst(new THREE.Vector3(0, 0, 0), 60, 2.6);
+      screenBurst(ORIGIN, 20); // big shard burst on completion
       onSnap();
     }
 
@@ -263,30 +218,6 @@ function Scene({ onSnap }: { onSnap: () => void }) {
       Math.sin(t * 1.1) * 0.14 + s.recoil.y,
       s.recoil.z
     );
-
-    // particles (shimmer = flicker scale)
-    let any = false;
-    for (let i = 0; i < PCOUNT; i++) {
-      const p = built.parts[i];
-      let sc = 0.0001;
-      if (p.life > 0) {
-        any = true;
-        p.life -= dt;
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.z += p.vz * dt;
-        p.vx *= 0.9;
-        p.vy *= 0.9;
-        p.vz *= 0.9;
-        const k = clamp(p.life / p.max, 0, 1);
-        sc = k * (0.7 + 0.5 * Math.sin(t * 14 + p.seed)) * 0.9; // twinkle
-      }
-      dummy.position.set(p.x, p.y, p.z);
-      dummy.scale.setScalar(Math.max(0.0001, sc));
-      dummy.updateMatrix();
-      built.pMesh.setMatrixAt(i, dummy.matrix);
-    }
-    if (any || s.flash > 0) built.pMesh.instanceMatrix.needsUpdate = true;
 
     // light-up pulse on completion
     if (s.flash > 0) {
