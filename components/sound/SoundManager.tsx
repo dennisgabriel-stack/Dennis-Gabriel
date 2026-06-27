@@ -392,8 +392,8 @@ export default function SoundManager() {
           return (
             <div className="pointer-events-none fixed bottom-12 right-12 z-[69]">
               {chars.map((ch, i) => {
-                // stacked vertically above the icon (i=0 on top, last just above icon)
-                const colY = -((N - 1 - i) * LH + 34);
+                // stacked vertically, clearing the icon (i=0 on top, last above icon)
+                const colY = -((N - 1 - i) * LH + 52);
                 const target =
                   labelPhase === 1
                     ? { x: -3, y: colY, rotate: 0, opacity: 1 }
