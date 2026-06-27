@@ -59,11 +59,15 @@ export default function Intro() {
     >
       {/* the 3×3 Rubik cube assembling */}
       <div className="relative h-72 w-72 md:h-96 md:w-96">
-        {/* soft glow backdrop behind the cube — intensifies on snap */}
+        {/* soft radial glow behind the cube — intensifies on snap */}
         <motion.div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold blur-[55px] md:h-52 md:w-52"
-          animate={{ opacity: flash ? 0.6 : 0.12, scale: flash ? 1.3 : 1 }}
-          transition={{ duration: flash ? 0.12 : 0.7, ease: "easeOut" }}
+          className="pointer-events-none absolute left-1/2 top-[46%] h-[140%] w-[140%] -translate-x-1/2 -translate-y-1/2"
+          style={{
+            background:
+              "radial-gradient(circle at center, rgba(201,168,106,0.4), rgba(201,168,106,0) 60%)",
+          }}
+          animate={{ opacity: flash ? 1 : 0.35, scale: flash ? 1.2 : 1 }}
+          transition={{ duration: flash ? 0.15 : 0.7, ease: "easeOut" }}
         />
         <CubeLoader key={run} onSnap={onSnap} />
       </div>
