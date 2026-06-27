@@ -170,6 +170,32 @@ export default function SoundManager() {
     voice(880, 0.1, "sine", 0.03, 0.005);
   };
 
+  /* hard "klack" — cube snapping into place */
+  const playKlack = () => {
+    const e = eng.current;
+    if (!e) return;
+    // sharp pitched transient + body
+    voice(2300, 0.04, "square", 0.05);
+    voice(440, 0.16, "triangle", 0.08, 0.006);
+    voice(180, 0.22, "sine", 0.05, 0.006);
+    // noise click
+    const t = e.ctx.currentTime;
+    const src = e.ctx.createBufferSource();
+    src.buffer = e.noise;
+    const hp = e.ctx.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 1400;
+    const g = e.ctx.createGain();
+    g.gain.setValueAtTime(0.14, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    src.connect(hp);
+    hp.connect(g);
+    g.connect(e.master);
+    g.connect(e.reverb);
+    src.start(t);
+    src.stop(t + 0.1);
+  };
+
   /* crisp detent tick for the rotary dial */
   const playTick = () => {
     if (!gate("tk", 28)) return;
@@ -312,6 +338,7 @@ export default function SoundManager() {
     const onTextOut = () => playTextOut();
     const onBlock = () => playBlock();
     const onTick = () => playTick();
+    const onKlack = () => playKlack();
     window.addEventListener("pointerover", over);
     window.addEventListener("click", click);
     window.addEventListener("ux-hover", onHover);
@@ -322,6 +349,7 @@ export default function SoundManager() {
     window.addEventListener("ux-textout", onTextOut);
     window.addEventListener("ux-block", onBlock);
     window.addEventListener("ux-tick", onTick);
+    window.addEventListener("ux-klack", onKlack);
     return () => {
       window.removeEventListener("pointerover", over);
       window.removeEventListener("click", click);
@@ -333,6 +361,7 @@ export default function SoundManager() {
       window.removeEventListener("ux-textout", onTextOut);
       window.removeEventListener("ux-block", onBlock);
       window.removeEventListener("ux-tick", onTick);
+      window.removeEventListener("ux-klack", onKlack);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled]);
