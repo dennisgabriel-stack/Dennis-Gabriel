@@ -43,8 +43,11 @@ export default function Nav() {
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 md:px-10">
         <a
           href="#top"
-          onClick={(e) => go(e, "#top")}
-          aria-label="ARCHANGEL — zum Seitenanfang"
+          onClick={(e) => {
+            e.preventDefault();
+            window.dispatchEvent(new CustomEvent("replay-intro"));
+          }}
+          aria-label="ARCHANGEL — Intro neu starten"
           className="flex items-center"
         >
           <Logo className="h-12 md:h-14" />

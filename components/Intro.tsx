@@ -3,33 +3,49 @@
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+import type Lenis from "lenis";
 
 const CubeLoader = dynamic(() => import("./three/CubeLoader"), { ssr: false });
 
 export default function Intro() {
+  const [run, setRun] = useState(0); // increments each play (also remounts the scene)
   const [closing, setClosing] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [flash, setFlash] = useState(false);
 
+  // lock scrolling whenever the intro is on screen
   useEffect(() => {
+    if (hidden) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev || "";
     };
+  }, [hidden, run]);
+
+  // replay from the header logo: jump to top, then run the animation again
+  useEffect(() => {
+    const replay = () => {
+      const lenis = (window as unknown as { lenis?: Lenis }).lenis;
+      if (lenis) lenis.scrollTo(0, { immediate: true });
+      else window.scrollTo(0, 0);
+      setFlash(false);
+      setClosing(false);
+      setHidden(false);
+      setRun((r) => r + 1);
+    };
+    window.addEventListener("replay-intro", replay);
+    return () => window.removeEventListener("replay-intro", replay);
   }, []);
 
-  // fired by the 3D scene the moment the corner cube locks in
+  // fired by the 3D scene the moment the cube completes
   const onSnap = useCallback(() => {
     if (typeof window !== "undefined")
       window.dispatchEvent(new CustomEvent("ux-klack"));
     setFlash(true);
     setTimeout(() => setFlash(false), 420);
     setTimeout(() => setClosing(true), 650);
-    setTimeout(() => {
-      document.body.style.overflow = "";
-      setHidden(true);
-    }, 1300);
+    setTimeout(() => setHidden(true), 1300);
   }, []);
 
   if (hidden) return null;
@@ -41,7 +57,7 @@ export default function Intro() {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       aria-hidden
     >
-      {/* the 2×2 Rubik cube with the flying corner */}
+      {/* the 3×3 Rubik cube assembling */}
       <div className="relative h-72 w-72 md:h-96 md:w-96">
         {/* soft glow backdrop behind the cube — intensifies on snap */}
         <motion.div
@@ -49,7 +65,7 @@ export default function Intro() {
           animate={{ opacity: flash ? 0.6 : 0.12, scale: flash ? 1.3 : 1 }}
           transition={{ duration: flash ? 0.12 : 0.7, ease: "easeOut" }}
         />
-        <CubeLoader onSnap={onSnap} />
+        <CubeLoader key={run} onSnap={onSnap} />
       </div>
 
       {/* subtle sound-on notice */}
