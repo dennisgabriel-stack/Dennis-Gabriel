@@ -30,6 +30,10 @@ export default function SoundManager() {
   const [ready, setReady] = useState(false);
   const eng = useRef<Engine | null>(null);
   const lastHover = useRef(0);
+  const enabledRef = useRef(false);
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
 
   /* lazily build the audio graph on first user gesture */
   const ensure = (): Engine => {
@@ -230,21 +234,64 @@ export default function SoundManager() {
     };
   };
 
-  const toggle = async () => {
+  // turn sound ON; returns false if the browser is still blocking audio
+  const enable = async (): Promise<boolean> => {
     const e = ensure();
-    if (e.ctx.state === "suspended") await e.ctx.resume();
-    setReady(true);
-    if (!enabled) {
-      e.master.gain.cancelScheduledValues(e.ctx.currentTime);
-      e.master.gain.linearRampToValueAtTime(0.9, e.ctx.currentTime + 1.5);
-      startPad();
-      playEnter();
-      setEnabled(true);
-    } else {
-      e.master.gain.linearRampToValueAtTime(0.0001, e.ctx.currentTime + 0.8);
-      setEnabled(false);
+    try {
+      if (e.ctx.state === "suspended") await e.ctx.resume();
+    } catch {
+      /* ignore */
     }
+    if (e.ctx.state !== "running") return false; // wait for a real gesture
+    setReady(true);
+    if (enabledRef.current) return true;
+    enabledRef.current = true;
+    e.master.gain.cancelScheduledValues(e.ctx.currentTime);
+    e.master.gain.linearRampToValueAtTime(0.9, e.ctx.currentTime + 1.5);
+    startPad();
+    playEnter();
+    setEnabled(true);
+    return true;
   };
+
+  const toggle = async () => {
+    if (!enabledRef.current) {
+      await enable();
+      return;
+    }
+    const e = ensure();
+    e.master.gain.linearRampToValueAtTime(0.0001, e.ctx.currentTime + 0.8);
+    enabledRef.current = false;
+    setEnabled(false);
+  };
+
+  // auto-enable sound as soon as possible: try immediately (some desktop
+  // browsers allow it), otherwise on the visitor's very first interaction
+  useEffect(() => {
+    let done = false;
+    const tryEnable = async () => {
+      if (done) return;
+      const ok = await enable();
+      if (ok) {
+        done = true;
+        remove();
+      }
+    };
+    const opts: AddEventListenerOptions = { passive: true };
+    const remove = () => {
+      window.removeEventListener("pointerdown", tryEnable);
+      window.removeEventListener("keydown", tryEnable);
+      window.removeEventListener("touchstart", tryEnable);
+      window.removeEventListener("scroll", tryEnable);
+    };
+    window.addEventListener("pointerdown", tryEnable, opts);
+    window.addEventListener("keydown", tryEnable, opts);
+    window.addEventListener("touchstart", tryEnable, opts);
+    window.addEventListener("scroll", tryEnable, opts);
+    tryEnable();
+    return remove;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* global UI sound delegation + custom events from the 3D scene */
   useEffect(() => {
