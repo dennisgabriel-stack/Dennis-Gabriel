@@ -4,13 +4,11 @@ import { useMemo, useRef, type MutableRefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-const { lerp } = THREE.MathUtils;
-const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-
 const S = 1.06; // spacing of the 2×2×2 grid
 const HALF = S / 2;
 const WHITE = new THREE.Color(0xffffff);
-const START = new THREE.Vector3(6.5, 5, 7.5); // where the corner flies in from
+const ZERO = new THREE.Vector3();
+const START = new THREE.Vector3(5.5, 4.5, 7); // where the corner flies in from
 const TARGET = new THREE.Vector3(HALF, HALF, HALF); // the empty corner slot
 
 // build a single Rubik cubelet (dark face + glowing gold edges)
@@ -70,31 +68,39 @@ function Scene({
     return { root, corner: corner.g, edgeMats, boxMats };
   }, []);
 
-  const st = useRef({ prog: 0, snapped: false, flash: 0 });
+  const st = useRef({ prog: 0, snapped: false, flash: 0, rec: new THREE.Vector3() });
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05);
     const t = state.clock.elapsedTime;
+    const s = st.current;
 
-    // floating, slow majestic tumble
+    // slow majestic tumble
     built.root.rotation.y += dt * 0.5;
     built.root.rotation.x = 0.3 + Math.sin(t * 0.45) * 0.16;
-    built.root.position.y = Math.sin(t * 1.2) * 0.16; // gentle hover
-    built.root.position.x = Math.sin(t * 0.8) * 0.06;
 
-    const s = st.current;
+    // the missing corner accelerates in and SLAMS into its slot
     if (phaseRef.current === "snap" && !s.snapped) {
-      s.prog = Math.min(1, s.prog + dt / 0.5);
-      const e = easeOut(s.prog);
+      s.prog = Math.min(1, s.prog + dt / 0.9);
+      const e = s.prog * s.prog; // ease-in → speeds up into the impact
       built.corner.position.lerpVectors(START, TARGET, e);
-      built.corner.scale.setScalar(lerp(0.2, 1, Math.min(1, e * 1.2)));
+      built.corner.scale.setScalar(1); // full-size, clearly visible flying in
       if (s.prog >= 1) {
         s.snapped = true;
         s.flash = 1;
         built.corner.position.copy(TARGET);
+        s.rec.set(-0.45, -0.36, -0.32); // recoil kick on impact
         onSnap();
       }
     }
+
+    // recoil decays back to rest (small kickback)
+    s.rec.lerp(ZERO, 0.14);
+    built.root.position.set(
+      Math.sin(t * 0.8) * 0.06 + s.rec.x,
+      Math.sin(t * 1.2) * 0.16 + s.rec.y,
+      s.rec.z
+    );
 
     // flash + overshoot pop when it locks in
     if (s.flash > 0) {

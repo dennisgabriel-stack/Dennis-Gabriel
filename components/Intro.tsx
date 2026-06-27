@@ -15,10 +15,10 @@ export default function Intro() {
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    // after a short beat of tumbling, send the missing corner flying in
+    // let it float & tumble a while, then send the missing corner flying in
     const tSnap = setTimeout(() => {
       phaseRef.current = "snap";
-    }, 1500);
+    }, 3000);
     return () => {
       clearTimeout(tSnap);
       document.body.style.overflow = prev || "";
