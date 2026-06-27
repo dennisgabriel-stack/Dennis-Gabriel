@@ -387,7 +387,11 @@ export default function SoundManager() {
               key={enabled ? "on" : "off"}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
+              exit={{
+                opacity: 0,
+                y: 34,
+                transition: { duration: 0.85, ease: "easeIn" },
+              }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="shimmer-gold font-mono text-[10px] uppercase tracking-[0.3em]"
               style={{ writingMode: "vertical-rl", textOrientation: "upright" }}
