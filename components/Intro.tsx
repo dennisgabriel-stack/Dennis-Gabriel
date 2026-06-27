@@ -121,7 +121,7 @@ export default function Intro() {
               >
                 <span>L</span>
                 {/* spinning O */}
-                <span className="relative inline-flex h-[0.9em] w-[0.9em] items-center justify-center">
+                <span className="relative inline-flex h-[0.78em] w-[0.78em] -translate-y-[0.05em] items-center justify-center">
                   <svg viewBox="0 0 36 36" className="h-full w-full">
                     <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(245,244,240,0.18)" strokeWidth="3" />
                     <circle
@@ -153,7 +153,7 @@ export default function Intro() {
                     width={633}
                     height={622}
                     priority
-                    className="inline-block h-[1em] w-auto -translate-y-[0.02em]"
+                    className="inline-block h-[0.74em] w-auto -translate-y-[0.08em]"
                   />
                 </motion.span>
                 <span>D</span>
