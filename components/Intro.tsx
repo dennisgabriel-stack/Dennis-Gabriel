@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 
@@ -10,17 +10,11 @@ export default function Intro() {
   const [closing, setClosing] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [flash, setFlash] = useState(false);
-  const phaseRef = useRef<"in" | "snap">("in");
 
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    // let it float & tumble a while, then send the missing corner flying in
-    const tSnap = setTimeout(() => {
-      phaseRef.current = "snap";
-    }, 3000);
     return () => {
-      clearTimeout(tSnap);
       document.body.style.overflow = prev || "";
     };
   }, []);
@@ -55,7 +49,7 @@ export default function Intro() {
           animate={{ opacity: flash ? 0.6 : 0.12, scale: flash ? 1.3 : 1 }}
           transition={{ duration: flash ? 0.12 : 0.7, ease: "easeOut" }}
         />
-        <CubeLoader phaseRef={phaseRef} onSnap={onSnap} />
+        <CubeLoader onSnap={onSnap} />
       </div>
 
       {/* subtle sound-on notice */}
