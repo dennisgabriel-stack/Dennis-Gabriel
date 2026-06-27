@@ -388,23 +388,24 @@ export default function SoundManager() {
         (() => {
           const chars = ("Sound " + (enabled ? "on" : "off")).split("");
           const N = chars.length;
-          const LW = 8.5;
+          const LH = 13; // vertical line spacing
           return (
             <div className="pointer-events-none fixed bottom-12 right-12 z-[69]">
               {chars.map((ch, i) => {
-                const baseX = (i - (N - 1) / 2) * LW;
+                // stacked vertically above the icon (i=0 on top, last just above icon)
+                const colY = -((N - 1 - i) * LH + 34);
                 const target =
                   labelPhase === 1
-                    ? { x: baseX, y: -82, rotate: 0, opacity: 1 }
+                    ? { x: -3, y: colY, rotate: 0, opacity: 1 }
                     : labelPhase === 2
-                    ? { x: baseX, y: -82, rotate: 90, opacity: 1 }
+                    ? { x: -3, y: colY, rotate: 90, opacity: 1 }
                     : { x: 0, y: 0, rotate: 90, opacity: 0 };
                 return (
                   <motion.span
                     key={i}
                     className="absolute left-0 top-0 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-gold"
                     style={{ textShadow: "0 0 8px rgba(201,168,106,0.55)" }}
-                    initial={{ x: baseX - 6, y: -82, rotate: 0, opacity: 0 }}
+                    initial={{ x: -3, y: colY - 4, rotate: 0, opacity: 0 }}
                     animate={target}
                     transition={
                       labelPhase === 1
