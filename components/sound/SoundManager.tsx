@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 /* ---- synthesized impulse response for a vast, divine reverb ---- */
 function makeImpulse(ctx: AudioContext, seconds: number, decay: number) {
@@ -32,7 +32,8 @@ export default function SoundManager() {
   const eng = useRef<Engine | null>(null);
   const lastHover = useRef(0);
   const enabledRef = useRef(false);
-  const [showLabel, setShowLabel] = useState(false);
+  // label phases: 0 none · 1 type-in (terminal) · 2 rotate 90° · 3 slide into icon
+  const [labelPhase, setLabelPhase] = useState(0);
   const firstRun = useRef(true);
   useEffect(() => {
     enabledRef.current = enabled;
@@ -40,10 +41,13 @@ export default function SoundManager() {
       firstRun.current = false;
       return;
     }
-    // briefly flash the vertical label, then let it fade away
-    setShowLabel(true);
-    const tmr = setTimeout(() => setShowLabel(false), 1300);
-    return () => clearTimeout(tmr);
+    setLabelPhase(1);
+    const timers = [
+      setTimeout(() => setLabelPhase(2), 1000),
+      setTimeout(() => setLabelPhase(3), 1550),
+      setTimeout(() => setLabelPhase(0), 2400),
+    ];
+    return () => timers.forEach(clearTimeout);
   }, [enabled]);
 
   /* lazily build the audio graph on first user gesture */
@@ -379,28 +383,44 @@ export default function SoundManager() {
 
   return (
     <>
-      {/* vertical label — briefly shimmers up on toggle, then fades away */}
-      <div className="pointer-events-none fixed bottom-[5.25rem] right-[1.95rem] z-[69] flex justify-center">
-        <AnimatePresence>
-          {showLabel && (
-            <motion.span
-              key={enabled ? "on" : "off"}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{
-                opacity: 0,
-                y: 34,
-                transition: { duration: 0.85, ease: "easeIn" },
-              }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="shimmer-gold font-mono text-[10px] uppercase tracking-[0.3em]"
-              style={{ writingMode: "vertical-rl", textOrientation: "upright" }}
-            >
-              Sound {enabled ? "on" : "off"}
-            </motion.span>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* terminal label: types in sideways → each letter rotates 90° → slides down into the icon */}
+      {labelPhase > 0 &&
+        (() => {
+          const chars = ("Sound " + (enabled ? "on" : "off")).split("");
+          const N = chars.length;
+          const LW = 8.5;
+          return (
+            <div className="pointer-events-none fixed bottom-12 right-12 z-[69]">
+              {chars.map((ch, i) => {
+                const baseX = (i - (N - 1) / 2) * LW;
+                const target =
+                  labelPhase === 1
+                    ? { x: baseX, y: -82, rotate: 0, opacity: 1 }
+                    : labelPhase === 2
+                    ? { x: baseX, y: -82, rotate: 90, opacity: 1 }
+                    : { x: 0, y: 0, rotate: 90, opacity: 0 };
+                return (
+                  <motion.span
+                    key={i}
+                    className="absolute left-0 top-0 font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-gold"
+                    style={{ textShadow: "0 0 8px rgba(201,168,106,0.55)" }}
+                    initial={{ x: baseX - 6, y: -82, rotate: 0, opacity: 0 }}
+                    animate={target}
+                    transition={
+                      labelPhase === 1
+                        ? { duration: 0.22, delay: i * 0.05, ease: "easeOut" }
+                        : labelPhase === 2
+                        ? { duration: 0.4, delay: i * 0.02, ease: [0.16, 1, 0.3, 1] }
+                        : { duration: 0.5, delay: i * 0.04, ease: "easeIn" }
+                    }
+                  >
+                    {ch === " " ? " " : ch}
+                  </motion.span>
+                );
+              })}
+            </div>
+          );
+        })()}
 
       <button
         onClick={toggle}
