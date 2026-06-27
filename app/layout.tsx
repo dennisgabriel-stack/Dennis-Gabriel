@@ -4,6 +4,7 @@ import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import SoundManager from "@/components/sound/SoundManager";
 import TapBurst from "@/components/TapBurst";
+import Intro from "@/components/Intro";
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -49,6 +50,7 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased grain">
         <SmoothScroll>{children}</SmoothScroll>
+        <Intro />
         <SoundManager />
         <TapBurst />
       </body>
