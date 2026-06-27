@@ -67,18 +67,23 @@ export default function Intro() {
     }
     setFly(target);
     setTimeout(() => setFlying(true), 480); // brief beat, then fly to the logo
-    setTimeout(() => setHidden(true), 480 + 1150);
+    setTimeout(() => setHidden(true), 480 + 1800);
   }, []);
 
   if (hidden) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-hidden" aria-hidden>
-      {/* dark backdrop fades away as the cube flies off → page reveals */}
+    <div
+      className={`fixed inset-0 z-[100] overflow-hidden ${
+        flying ? "pointer-events-none" : ""
+      }`}
+      aria-hidden
+    >
+      {/* dark backdrop fades away slowly as the cube flies off → page reveals gradually */}
       <motion.div
         className="absolute inset-0 bg-ink"
         animate={{ opacity: flying ? 0 : 1 }}
-        transition={{ duration: 0.95, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 1.7, ease: [0.33, 0, 0.4, 1] }}
       />
 
       <div className="absolute inset-0 flex flex-col items-center justify-center">

@@ -143,10 +143,15 @@ function Scene({ onSnap }: { onSnap: () => void }) {
     t0: -1,
     snapped: false,
     flash: 0,
+    tumbleY: 0,
     recoil: new THREE.Vector3(),
     recVel: new THREE.Vector3(),
+    ang: new THREE.Vector3(), // angular offset (x,y,z) from impacts
+    angVel: new THREE.Vector3(),
   });
   const acc = useMemo(() => new THREE.Vector3(), []);
+  const angAcc = useMemo(() => new THREE.Vector3(), []);
+  const torque = useMemo(() => new THREE.Vector3(), []);
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05);
@@ -166,9 +171,19 @@ function Scene({ onSnap }: { onSnap: () => void }) {
       spawnBurst(sx, sy, count);
     };
 
-    // slow tumble
-    built.root.rotation.y += dt * 0.45;
-    built.root.rotation.x = 0.3 + Math.sin(t * 0.4) * 0.14;
+    // slow tumble + physical angular recoil (springs back after each hit)
+    s.tumbleY += dt * 0.45;
+    const KR = 60;
+    const CR = 11; // slightly underdamped → it wobbles like taking hits
+    angAcc.copy(s.ang).multiplyScalar(-KR).addScaledVector(s.angVel, -CR);
+    s.angVel.addScaledVector(angAcc, dt);
+    s.ang.addScaledVector(s.angVel, dt);
+    s.ang.clampLength(0, 0.7);
+    built.root.rotation.set(
+      0.3 + Math.sin(t * 0.4) * 0.14 + s.ang.x,
+      s.tumbleY + s.ang.y,
+      s.ang.z
+    );
 
     // corners materialise
     const ci = smoother(T / CORNER_IN);
@@ -192,8 +207,11 @@ function Scene({ onSnap }: { onSnap: () => void }) {
         f.g.rotation.set(0, 0, 0);
         emit("ux-tick");
         screenBurst(f.target, 7); // click-style shards where it locks in
-        // soft impulse into the recoil spring (inbound direction)
+        // linear knock in the inbound direction
         s.recVel.addScaledVector(f.dir, 0.55);
+        // angular knock — torque = lever (slot) × force (inbound), like a punch
+        torque.copy(f.target).cross(f.dir).multiplyScalar(2.4);
+        s.angVel.add(torque);
       }
     });
 
@@ -230,7 +248,8 @@ function Scene({ onSnap }: { onSnap: () => void }) {
       built.boxMats.forEach((m) => m.color.copy(BOX_DARK).lerp(BOX_LIT, f));
       built.frameMat.color.copy(GOLD).lerp(WHITE, f);
       built.frameMat.opacity = 0.16 + f * 0.5;
-      built.root.scale.setScalar(1 + f * 0.05);
+      // pressed-in like a button while it lights up, then springs back
+      built.root.scale.setScalar(1 - f * 0.1);
     } else {
       built.root.scale.setScalar(1);
     }
