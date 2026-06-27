@@ -1,23 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import type Lenis from "lenis";
+import { spawnBurst } from "./burst";
 
-const CubeLoader = dynamic(() => import("./three/CubeLoader"), { ssr: false });
+const emit = (n: string) => {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(n));
+};
 
-type Fly = { x: number; y: number; scale: number };
+const TERM = ["..booting System", "loading stack"];
 
 export default function Intro() {
-  const [run, setRun] = useState(0); // increments each play (remounts the scene)
-  const [flying, setFlying] = useState(false); // cube flies into the header logo
+  const [run, setRun] = useState(0);
+  const [step, setStep] = useState(0); // 0 load · 1/2 terminal · 3 shimmer · 4 welcome · 5 reveal
   const [hidden, setHidden] = useState(false);
-  const [flash, setFlash] = useState(false);
-  const [fly, setFly] = useState<Fly | null>(null);
-  const cubeRef = useRef<HTMLDivElement>(null);
 
-  // lock scrolling while the intro is on screen
+  // lock scroll while visible
   useEffect(() => {
     if (hidden) return;
     const prev = document.body.style.overflow;
@@ -27,15 +27,12 @@ export default function Intro() {
     };
   }, [hidden, run]);
 
-  // replay from the header logo
+  // replay from header logo
   useEffect(() => {
     const replay = () => {
       const lenis = (window as unknown as { lenis?: Lenis }).lenis;
       if (lenis) lenis.scrollTo(0, { immediate: true });
       else window.scrollTo(0, 0);
-      setFlash(false);
-      setFlying(false);
-      setFly(null);
       setHidden(false);
       setRun((r) => r + 1);
     };
@@ -43,87 +40,160 @@ export default function Intro() {
     return () => window.removeEventListener("replay-intro", replay);
   }, []);
 
-  // fired the moment the 3×3 completes
-  const onSnap = useCallback(() => {
-    if (typeof window !== "undefined")
-      window.dispatchEvent(new CustomEvent("ux-klack"));
-    setFlash(true);
-    setTimeout(() => setFlash(false), 420);
-
-    // compute where the header logo's cube sits, then fly there
-    const logo = document.getElementById("brand-logo");
-    const cont = cubeRef.current;
-    let target: Fly = { x: 0, y: -window.innerHeight * 0.4, scale: 0.1 };
-    if (logo && cont) {
-      const r = logo.getBoundingClientRect();
-      const cx = r.left + r.width * 0.32; // the cube sits in the A, left-of-centre
-      const cy = r.top + r.height * 0.5;
-      const ch = cont.offsetHeight || 320;
-      target = {
-        x: cx - window.innerWidth / 2,
-        y: cy - window.innerHeight / 2,
-        scale: Math.max(0.08, (r.height / ch) * 0.7),
-      };
-    }
-    setFly(target);
-    setTimeout(() => setFlying(true), 480); // brief beat, then fly to the logo
-    setTimeout(() => setHidden(true), 480 + 1800);
-  }, []);
+  // timeline
+  useEffect(() => {
+    setStep(0);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const at = (ms: number, fn: () => void) => timers.push(setTimeout(fn, ms));
+    at(600, () => {
+      setStep(1);
+      emit("ux-tick");
+    });
+    at(1600, () => {
+      setStep(2);
+      emit("ux-tick");
+    });
+    at(2700, () => {
+      setStep(3);
+      emit("ux-woosh");
+    });
+    at(3300, () => {
+      setStep(4);
+      emit("ux-burst");
+      spawnBurst(window.innerWidth / 2, window.innerHeight / 2, 18);
+    });
+    at(4600, () => setStep(5));
+    at(6300, () => setHidden(true));
+    return () => timers.forEach(clearTimeout);
+  }, [run]);
 
   if (hidden) return null;
+
+  const revealing = step >= 5;
+  const welcome = step >= 4;
+  const shimmer = step >= 3;
 
   return (
     <div
       className={`fixed inset-0 z-[100] overflow-hidden ${
-        flying ? "pointer-events-none" : ""
+        revealing ? "pointer-events-none" : ""
       }`}
       aria-hidden
     >
-      {/* dark backdrop fades away slowly as the cube flies off → page reveals gradually */}
+      {/* fitting background — dark + gold glow + faint grid (fades on reveal) */}
       <motion.div
         className="absolute inset-0 bg-ink"
-        animate={{ opacity: flying ? 0 : 1 }}
-        transition={{ duration: 1.7, ease: [0.33, 0, 0.4, 1] }}
-      />
-
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        {/* the 3×3 Rubik cube — flies into the header logo on completion */}
-        <motion.div
-          ref={cubeRef}
-          className="relative h-72 w-72 md:h-96 md:w-96"
-          animate={
-            flying && fly
-              ? { x: fly.x, y: fly.y, scale: fly.scale, opacity: 0 }
-              : { x: 0, y: 0, scale: 1, opacity: 1 }
-          }
-          transition={{
-            default: { duration: 1.1, ease: [0.6, 0, 0.2, 1] },
-            opacity: { duration: 0.4, delay: 0.72 },
+        animate={{ opacity: revealing ? 0 : 1 }}
+        transition={{ duration: 1.5, ease: [0.33, 0, 0.4, 1] }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(201,168,106,0.10),transparent_60%)]" />
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(201,168,106,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,106,0.6) 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
           }}
-        >
-          {/* soft radial glow behind the cube — intensifies on snap */}
-          <motion.div
-            className="pointer-events-none absolute left-1/2 top-[46%] h-[140%] w-[140%] -translate-x-1/2 -translate-y-1/2"
-            style={{
-              background:
-                "radial-gradient(circle at center, rgba(201,168,106,0.4), rgba(201,168,106,0) 60%)",
-            }}
-            animate={{ opacity: flash ? 1 : flying ? 0 : 0.35, scale: flash ? 1.2 : 1 }}
-            transition={{ duration: flash ? 0.15 : 0.7, ease: "easeOut" }}
-          />
-          <CubeLoader key={run} onSnap={onSnap} />
-        </motion.div>
+        />
+        <div
+          className="absolute left-1/3 top-1/4 h-72 w-72 rounded-full blur-[130px]"
+          style={{ background: "#c9a86a", opacity: 0.12, animation: "aurora1 22s ease-in-out infinite" }}
+        />
+      </motion.div>
 
-        {/* subtle sound-on notice */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: flying ? 0 : 1 }}
-          transition={{ delay: flying ? 0 : 0.5, duration: flying ? 0.3 : 0.6 }}
-          className="-mt-4 flex items-center gap-2 text-[10px] uppercase tracking-[0.35em] text-muted"
-        >
-          <span className="text-gold">♪</span> Sound on
-        </motion.div>
-      </div>
+      <motion.div
+        className="absolute inset-0 flex flex-col items-center justify-center"
+        animate={{ opacity: revealing ? 0 : 1 }}
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <AnimatePresence mode="wait">
+          {!welcome ? (
+            <motion.div
+              key="loading"
+              exit={{ opacity: 0, scale: 0.96, filter: "blur(6px)" }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col items-center"
+            >
+              {/* LOADING wordmark — spinning O, A replaced by the logo mark */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className={`flex items-center justify-center gap-[0.06em] font-display text-[2.4rem] font-bold tracking-[0.18em] text-bone md:text-6xl ${
+                  shimmer ? "shimmer-gold" : ""
+                }`}
+              >
+                <span>L</span>
+                {/* spinning O */}
+                <span className="relative inline-flex h-[0.9em] w-[0.9em] items-center justify-center">
+                  <svg viewBox="0 0 36 36" className="h-full w-full">
+                    <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(245,244,240,0.18)" strokeWidth="3" />
+                    <circle
+                      className="ld-spin"
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      fill="none"
+                      stroke="#c9a86a"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray="26 200"
+                    />
+                  </svg>
+                </span>
+                {/* A → logo mark */}
+                <motion.span
+                  className="relative inline-block"
+                  animate={{
+                    filter: shimmer
+                      ? "drop-shadow(0 0 14px rgba(201,168,106,0.85))"
+                      : "drop-shadow(0 0 4px rgba(201,168,106,0.3))",
+                  }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <Image
+                    src="/images/a-mark.png"
+                    alt="A"
+                    width={633}
+                    height={622}
+                    priority
+                    className="inline-block h-[1em] w-auto -translate-y-[0.02em]"
+                  />
+                </motion.span>
+                <span>D</span>
+                <span>I</span>
+                <span>N</span>
+                <span>G</span>
+              </motion.div>
+
+              {/* terminal lines */}
+              <div className="mt-8 h-12 w-[260px] font-mono text-[11px] leading-5 tracking-wide text-gold/80 md:w-[320px] md:text-xs">
+                {TERM.map((line, i) => (
+                  <motion.div
+                    key={line}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: step > i ? 1 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <span className="text-bone/40">&gt;</span> {line}
+                    {step === i + 1 && <span className="term-cursor">▋</span>}
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="welcome"
+              initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="shimmer-gold font-display text-5xl font-black tracking-[0.22em] md:text-8xl"
+            >
+              WELCOME
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

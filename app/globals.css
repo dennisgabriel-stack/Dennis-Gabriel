@@ -100,6 +100,25 @@ body {
   }
 }
 
+/* loading spinner (the "O" in LOADING) */
+.ld-spin {
+  transform-origin: center;
+  animation: ld-spin 0.9s linear infinite;
+}
+@keyframes ld-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.term-cursor {
+  animation: term-blink 1s steps(1) infinite;
+}
+@keyframes term-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 /* rotary dial HUD rings */
 .dial-spin {
   animation: dial-rot 24s linear infinite;
