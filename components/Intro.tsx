@@ -10,8 +10,6 @@ const emit = (n: string) => {
   if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent(n));
 };
 
-const TERM = ["..booting System", "loading stack"];
-
 export default function Intro() {
   const [run, setRun] = useState(0);
   const [step, setStep] = useState(0); // 0 load · 1/2 terminal · 3 shimmer · 4 welcome · 5 reveal
@@ -72,6 +70,13 @@ export default function Intro() {
   const revealing = step >= 5;
   const welcome = step >= 4;
   const shimmer = step >= 3;
+
+  // logo-click replay shows reboot copy + "Hello Again"
+  const isReplay = run > 0;
+  const term = isReplay
+    ? ["rebooting System", "restoring session"]
+    : ["..booting System", "loading stack"];
+  const finalWord = isReplay ? "Hello Again" : "WELCOME";
 
   return (
     <div
@@ -164,7 +169,7 @@ export default function Intro() {
 
               {/* terminal lines */}
               <div className="mt-8 h-12 w-[260px] font-mono text-[11px] leading-5 tracking-wide text-gold/80 md:w-[320px] md:text-xs">
-                {TERM.map((line, i) => (
+                {term.map((line, i) => (
                   <motion.div
                     key={line}
                     initial={{ opacity: 0 }}
@@ -200,10 +205,10 @@ export default function Intro() {
                 duration: revealing ? 2 : 0.9,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="font-display text-4xl font-light uppercase text-bone md:text-7xl"
+              className="whitespace-nowrap px-4 text-center font-display text-[2rem] font-light text-bone md:text-7xl"
               style={{ textShadow: "0 0 24px rgba(245,244,240,0.25)" }}
             >
-              WELCOME
+              {finalWord}
             </motion.div>
           )}
         </AnimatePresence>
