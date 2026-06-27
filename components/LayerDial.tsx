@@ -76,6 +76,7 @@ export default function LayerDial({
     cy: 0,
     target: null as number | null,
     nextAuto: 0,
+    visible: false,
   });
 
   const AUTO_MS = 4500; // dwell on each layer before auto-advancing one step
@@ -133,6 +134,16 @@ export default function LayerDial({
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
 
+    // only auto-rotate (and play its sounds) while the dial is on screen
+    const io = new IntersectionObserver(
+      ([e]) => {
+        st.visible = e.isIntersecting;
+        if (e.isIntersecting) st.nextAuto = performance.now() + AUTO_MS;
+      },
+      { threshold: 0.35 }
+    );
+    io.observe(wrap);
+
     st.nextAuto = performance.now() + AUTO_MS;
 
     let raf = 0;
@@ -140,6 +151,7 @@ export default function LayerDial({
       const now = performance.now();
       // auto-advance one detent when idle and the dwell time has elapsed
       if (
+        st.visible &&
         !st.dragging &&
         st.target === null &&
         st.settled &&
@@ -195,6 +207,7 @@ export default function LayerDial({
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       wrap.removeEventListener("pointerdown", down);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
