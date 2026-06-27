@@ -62,8 +62,8 @@ export default function Intro() {
       emit("ux-burst");
       spawnBurst(window.innerWidth / 2, window.innerHeight / 2, 18);
     });
-    at(4600, () => setStep(5));
-    at(6300, () => setHidden(true));
+    at(6000, () => setStep(5)); // hold WELCOME longer before the slow dissolve
+    at(8200, () => setHidden(true));
     return () => timers.forEach(clearTimeout);
   }, [run]);
 
@@ -84,7 +84,7 @@ export default function Intro() {
       <motion.div
         className="absolute inset-0 bg-ink"
         animate={{ opacity: revealing ? 0 : 1 }}
-        transition={{ duration: 1.5, ease: [0.33, 0, 0.4, 1] }}
+        transition={{ duration: 1.9, ease: [0.33, 0, 0.4, 1] }}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(201,168,106,0.10),transparent_60%)]" />
         <div
@@ -101,11 +101,7 @@ export default function Intro() {
         />
       </motion.div>
 
-      <motion.div
-        className="absolute inset-0 flex flex-col items-center justify-center"
-        animate={{ opacity: revealing ? 0 : 1 }}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-      >
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">
           {!welcome ? (
             <motion.div
@@ -184,16 +180,34 @@ export default function Intro() {
           ) : (
             <motion.div
               key="welcome"
-              initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
-              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="shimmer-gold font-display text-5xl font-black tracking-[0.22em] md:text-8xl"
+              initial={{ opacity: 0, scale: 0.9, filter: "blur(12px)", letterSpacing: "0.25em" }}
+              animate={
+                revealing
+                  ? {
+                      opacity: 0,
+                      scale: 1.04,
+                      filter: "blur(16px)",
+                      letterSpacing: "0.7em",
+                    }
+                  : {
+                      opacity: 1,
+                      scale: 1,
+                      filter: "blur(0px)",
+                      letterSpacing: "0.42em",
+                    }
+              }
+              transition={{
+                duration: revealing ? 2 : 0.9,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="font-display text-4xl font-light uppercase text-bone md:text-7xl"
+              style={{ textShadow: "0 0 24px rgba(245,244,240,0.25)" }}
             >
               WELCOME
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
     </div>
   );
 }
