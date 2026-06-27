@@ -12,7 +12,6 @@ const WHITE = new THREE.Color(0xffffff);
 const BOX_DARK = new THREE.Color(0x131318);
 const BOX_LIT = new THREE.Color(0x6a5226);
 const GOLD = new THREE.Color(0xc9a86a);
-const GOLD_HI = new THREE.Color(0xe6c88a);
 
 const smoother = (x: number) => {
   x = clamp(x, 0, 1);
@@ -82,21 +81,6 @@ function Scene({ onSnap }: { onSnap: () => void }) {
       frameMat
     );
     root.add(frame);
-    const nodeMats: THREE.MeshBasicMaterial[] = [];
-    for (const sx of [-1, 1])
-      for (const sy of [-1, 1])
-        for (const sz of [-1, 1]) {
-          const nm = new THREE.MeshBasicMaterial({
-            color: 0xe6c88a,
-            transparent: true,
-            opacity: 0.85,
-            blending: THREE.AdditiveBlending,
-          });
-          const node = new THREE.Mesh(new THREE.OctahedronGeometry(0.07), nm);
-          node.position.set((sx * W) / 2, (sy * W) / 2, (sz * W) / 2);
-          root.add(node);
-          nodeMats.push(nm);
-        }
 
     // ---- cubelets ----
     const coords = [-1, 0, 1];
@@ -181,7 +165,6 @@ function Scene({ onSnap }: { onSnap: () => void }) {
     return {
       root,
       frameMat,
-      nodeMats,
       edgeMats,
       boxMats,
       corners,
@@ -193,7 +176,14 @@ function Scene({ onSnap }: { onSnap: () => void }) {
     };
   }, []);
 
-  const st = useRef({ t0: -1, snapped: false, flash: 0, recoil: new THREE.Vector3() });
+  const st = useRef({
+    t0: -1,
+    snapped: false,
+    flash: 0,
+    recoil: new THREE.Vector3(),
+    recVel: new THREE.Vector3(),
+  });
+  const acc = useMemo(() => new THREE.Vector3(), []);
 
   const burst = (at: THREE.Vector3, n: number, power: number) => {
     for (let k = 0; k < n; k++) {
@@ -247,8 +237,8 @@ function Scene({ onSnap }: { onSnap: () => void }) {
         f.g.rotation.set(0, 0, 0);
         emit("ux-tick");
         burst(f.target, 9, 1.5); // shimmer where it locks in
-        // recoil the whole structure in the inbound direction
-        s.recoil.addScaledVector(f.dir, 0.12).clampLength(0, 0.28);
+        // soft impulse into the recoil spring (inbound direction)
+        s.recVel.addScaledVector(f.dir, 0.55);
       }
     });
 
@@ -261,8 +251,13 @@ function Scene({ onSnap }: { onSnap: () => void }) {
       onSnap();
     }
 
-    // recoil spring-back + float
-    s.recoil.lerp(new THREE.Vector3(), 0.12);
+    // smooth recoil spring (gentle, slightly damped) + float
+    const K = 42; // stiffness
+    const C = 13; // damping (near critical → no hard snap)
+    acc.copy(s.recoil).multiplyScalar(-K).addScaledVector(s.recVel, -C);
+    s.recVel.addScaledVector(acc, dt);
+    s.recoil.addScaledVector(s.recVel, dt);
+    s.recoil.clampLength(0, 0.3);
     built.root.position.set(
       Math.sin(t * 0.7) * 0.05 + s.recoil.x,
       Math.sin(t * 1.1) * 0.14 + s.recoil.y,
@@ -304,9 +299,6 @@ function Scene({ onSnap }: { onSnap: () => void }) {
       built.boxMats.forEach((m) => m.color.copy(BOX_DARK).lerp(BOX_LIT, f));
       built.frameMat.color.copy(GOLD).lerp(WHITE, f);
       built.frameMat.opacity = 0.16 + f * 0.5;
-      built.nodeMats.forEach((m) => {
-        m.color.copy(GOLD_HI).lerp(WHITE, f);
-      });
       built.root.scale.setScalar(1 + f * 0.05);
     } else {
       built.root.scale.setScalar(1);
