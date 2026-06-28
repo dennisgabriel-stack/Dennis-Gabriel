@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Reveal from "./Reveal";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import type Lenis from "lenis";
 
 type Pillar = {
@@ -83,8 +84,8 @@ const PILLARS: Pillar[] = [
 
 function Icon({ kind, color }: { kind: Pillar["icon"]; color: string }) {
   const common = {
-    width: 26,
-    height: 26,
+    width: 24,
+    height: 24,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: color,
@@ -118,6 +119,8 @@ function Icon({ kind, color }: { kind: Pillar["icon"]; color: string }) {
 }
 
 export default function Skills() {
+  const [active, setActive] = useState(0);
+
   const go = (href: string) => {
     const lenis = (window as unknown as { lenis?: Lenis }).lenis;
     if (lenis) lenis.scrollTo(href, { offset: -20, duration: 1.4 });
@@ -126,7 +129,7 @@ export default function Skills() {
 
   return (
     <section id="skills" className="relative w-full overflow-hidden py-28 md:py-40">
-      {/* ambient background — aurora + faint grid, matching the site */}
+      {/* ambient background — aurora + faint grid */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(201,168,106,0.10),transparent_55%)]" />
         <div
@@ -147,8 +150,8 @@ export default function Skills() {
         />
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 md:px-10">
-        <div className="mb-14 max-w-3xl">
+      <div className="relative mx-auto max-w-4xl px-6 md:px-10">
+        <div className="mb-12 max-w-3xl">
           <Reveal>
             <p className="mb-6 text-xs uppercase tracking-[0.4em] text-gold">
               Können
@@ -160,112 +163,139 @@ export default function Skills() {
               <span className="font-serif italic text-gold">eine Handschrift</span>.
             </h2>
           </Reveal>
-          <Reveal delay={0.1}>
-            <p className="mt-6 max-w-xl text-lg text-muted">
-              Strategie, Gestaltung und Engineering greifen ineinander — gebaut,
-              um zu skalieren, und gestaltet, um zu bleiben.
-            </p>
-          </Reveal>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {PILLARS.map((p, i) => (
-            <Reveal key={p.no} delay={i * 0.1}>
-              <motion.div
-                whileHover={{ y: -6 }}
-                transition={{ type: "spring", stiffness: 300, damping: 24 }}
-                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border bg-ink-card/50 p-7 backdrop-blur-sm transition-colors duration-500"
-                style={{ borderColor: `${p.accent}22` }}
-              >
-                {/* top accent beam */}
+        {/* interactive accordion */}
+        <div className="flex flex-col gap-4">
+          {PILLARS.map((p, i) => {
+            const open = active === i;
+            return (
+              <Reveal key={p.no} delay={i * 0.08}>
                 <div
-                  className="absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 transition-transform duration-700 group-hover:scale-x-100"
+                  className="overflow-hidden rounded-2xl border bg-ink-card/50 backdrop-blur-sm transition-colors duration-500"
                   style={{
-                    background: `linear-gradient(90deg, transparent, ${p.accent}, transparent)`,
+                    borderColor: open ? `${p.accent}55` : `${p.accent}1a`,
+                    boxShadow: open ? `0 0 50px ${p.accent}14` : "none",
                   }}
-                />
-                {/* hover glow */}
-                <div
-                  className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                  style={{ boxShadow: `inset 0 0 60px ${p.accent}14, 0 0 40px ${p.accent}1a` }}
-                />
-
-                <div className="relative flex items-center justify-between">
-                  <span
-                    className="flex h-12 w-12 items-center justify-center rounded-xl border transition-colors duration-500"
-                    style={{
-                      borderColor: `${p.accent}33`,
-                      background: `${p.accent}10`,
-                    }}
-                  >
-                    <Icon kind={p.icon} color={p.accent} />
-                  </span>
-                  <span
-                    className="font-display text-5xl font-bold text-bone/10 transition-colors duration-500"
-                    style={{ color: undefined }}
-                  >
-                    {p.no}
-                  </span>
-                </div>
-
-                <h3 className="relative mt-6 font-display text-2xl font-semibold text-bone">
-                  {p.title}
-                </h3>
-                <p className="relative mt-3 text-sm leading-relaxed text-muted">
-                  {p.desc}
-                </p>
-
-                {p.badge && (
-                  <div
-                    className="relative mt-4 inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em]"
-                    style={{
-                      borderColor: `${p.accent}44`,
-                      background: `${p.accent}12`,
-                      color: p.accent,
-                    }}
+                >
+                  {/* header row */}
+                  <button
+                    onClick={() => setActive(i)}
+                    aria-expanded={open}
+                    className="flex w-full items-center gap-4 px-6 py-5 text-left transition-colors duration-300 md:px-8"
                   >
                     <span
-                      className="h-1.5 w-1.5 rounded-full"
-                      style={{ background: p.accent }}
-                    />
-                    {p.badge}
-                  </div>
-                )}
-
-                <div className="relative mt-6 flex flex-wrap gap-2">
-                  {p.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-lg border px-2.5 py-1 text-[11px] text-bone/80 transition-colors duration-300"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border transition-all duration-500"
                       style={{
-                        borderColor: `${p.accent}26`,
-                        background: `${p.accent}0d`,
+                        borderColor: open ? `${p.accent}55` : `${p.accent}26`,
+                        background: open ? `${p.accent}1a` : `${p.accent}0a`,
                       }}
                     >
-                      {t}
+                      <Icon kind={p.icon} color={p.accent} />
                     </span>
-                  ))}
-                </div>
+                    <span
+                      className="font-mono text-xs tracking-[0.2em]"
+                      style={{ color: open ? p.accent : "#6a6a72" }}
+                    >
+                      {p.no}
+                    </span>
+                    <h3
+                      className="flex-1 font-display text-xl font-semibold transition-colors duration-300 md:text-2xl"
+                      style={{ color: open ? "#f5f4f0" : "#9a9a9f" }}
+                    >
+                      {p.title}
+                    </h3>
+                    {/* chevron / plus */}
+                    <motion.span
+                      animate={{ rotate: open ? 45 : 0 }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      className="text-2xl font-light leading-none"
+                      style={{ color: p.accent }}
+                    >
+                      +
+                    </motion.span>
+                  </button>
 
-                {/* per-card CTA */}
-                <button
-                  onClick={() => go("#contact")}
-                  className="group/cta relative mt-7 inline-flex w-fit items-center gap-2 text-sm font-medium transition-colors duration-300"
-                  style={{ color: p.accent }}
-                >
-                  {p.cta}
-                  <span className="transition-transform duration-300 group-hover/cta:translate-x-1">
-                    →
-                  </span>
-                </button>
-              </motion.div>
-            </Reveal>
-          ))}
+                  {/* expanding content */}
+                  <AnimatePresence initial={false}>
+                    {open && (
+                      <motion.div
+                        key="content"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-6 pb-7 md:px-8">
+                          <div
+                            className="mb-5 h-px w-full"
+                            style={{
+                              background: `linear-gradient(90deg, ${p.accent}44, transparent)`,
+                            }}
+                          />
+                          <p className="max-w-2xl text-sm leading-relaxed text-muted md:text-base">
+                            {p.desc}
+                          </p>
+
+                          {p.badge && (
+                            <div
+                              className="mt-4 inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-[10px] uppercase tracking-[0.2em]"
+                              style={{
+                                borderColor: `${p.accent}44`,
+                                background: `${p.accent}12`,
+                                color: p.accent,
+                              }}
+                            >
+                              <span
+                                className="h-1.5 w-1.5 rounded-full"
+                                style={{ background: p.accent }}
+                              />
+                              {p.badge}
+                            </div>
+                          )}
+
+                          <div className="mt-5 flex flex-wrap gap-2">
+                            {p.tags.map((t, ti) => (
+                              <motion.span
+                                key={t}
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 + ti * 0.03, duration: 0.3 }}
+                                className="rounded-lg border px-2.5 py-1 text-[11px] text-bone/85"
+                                style={{
+                                  borderColor: `${p.accent}26`,
+                                  background: `${p.accent}0d`,
+                                }}
+                              >
+                                {t}
+                              </motion.span>
+                            ))}
+                          </div>
+
+                          <button
+                            onClick={() => go("#contact")}
+                            className="group/cta mt-7 inline-flex items-center gap-2 text-sm font-medium"
+                            style={{ color: p.accent }}
+                          >
+                            {p.cta}
+                            <span className="transition-transform duration-300 group-hover/cta:translate-x-1">
+                              →
+                            </span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </Reveal>
+            );
+          })}
         </div>
 
         {/* section call-to-action */}
         <Reveal delay={0.15}>
-          <div className="mt-14 flex flex-col items-center justify-between gap-6 rounded-2xl border border-gold/20 bg-ink-card/40 px-8 py-8 text-center backdrop-blur-sm md:flex-row md:text-left">
+          <div className="mt-12 flex flex-col items-center justify-between gap-6 rounded-2xl border border-gold/20 bg-ink-card/40 px-8 py-8 text-center backdrop-blur-sm md:flex-row md:text-left">
             <div>
               <h3 className="font-display text-2xl font-bold text-bone md:text-3xl">
                 Bereit, etwas Bleibendes zu bauen?
