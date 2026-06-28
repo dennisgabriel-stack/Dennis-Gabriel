@@ -49,18 +49,27 @@ export default function Contact() {
         <Reveal delay={0.3}>
           <div className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm">
             {[
-              { label: "GitHub", href: "#" },
-              { label: "LinkedIn", href: "#" },
-              { label: "Instagram", href: "#" },
-            ].map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                className="text-muted underline-offset-4 transition-colors hover:text-bone hover:underline"
-              >
-                {l.label}
-              </a>
-            ))}
+              { label: "X", href: "https://x.com/solairetrades?s=11" },
+              {
+                label: "Instagram",
+                href: "https://www.instagram.com/dagles27?igsh=Z24wY2d6cndvNTY3&utm_source=qr",
+              },
+              { label: "E-Mail", href: "mailto:vimode@gmx.de" },
+            ].map((l) => {
+              const external = l.href.startsWith("http");
+              return (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  {...(external
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                  className="text-muted underline-offset-4 transition-colors hover:text-bone hover:underline"
+                >
+                  {l.label}
+                </a>
+              );
+            })}
           </div>
         </Reveal>
       </div>
