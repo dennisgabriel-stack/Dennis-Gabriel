@@ -159,8 +159,8 @@ export default function Skills() {
           </Reveal>
           <Reveal delay={0.05}>
             <h2 className="font-display text-4xl font-bold leading-tight md:text-6xl">
-              Ein Kopf, das{" "}
-              <span className="font-serif italic text-gold">ganze Spektrum</span>.
+              Strategie, Design und Code —{" "}
+              <span className="font-serif italic text-gold">aus einer Hand</span>.
             </h2>
           </Reveal>
         </div>
