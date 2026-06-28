@@ -444,12 +444,13 @@ function Blocks({
     const building = form >= 0;
     const targets = building ? FORM_TARGETS[form] : null;
 
-    // focus fly-in target — lower-centre of the canvas so the close-up cube
-    // keeps clear distance from the heading text above it
+    // focus fly-in target — on portrait/mobile lift the close-up cube ABOVE the
+    // info card (which sits at the bottom); on desktop keep it centred
+    const portrait = state.size.height > state.size.width;
     const front = tmp
       .copy(camera.position)
       .add(v3.set(0, 0, -6.5).applyQuaternion(camera.quaternion));
-    front.y -= 0.8;
+    front.y += portrait ? 1.5 : -0.2;
 
     // integrate physics
     for (let i = 0; i < blocks.length; i++) {
@@ -538,7 +539,7 @@ function Blocks({
       const b = blocks[i];
       b.mesh.position.copy(b.pos);
       if (focusing && i === focused) {
-        b.mesh.scale.setScalar(lerp(b.mesh.scale.x, 1.7, 0.1));
+        b.mesh.scale.setScalar(lerp(b.mesh.scale.x, portrait ? 1.5 : 1.8, 0.1));
         b.mesh.rotation.y += dt * 0.55;
         b.mesh.rotation.x += dt * 0.4;
         b.mats.forEach((m, jj) => (m.opacity = b.baseOpacity[jj]));
