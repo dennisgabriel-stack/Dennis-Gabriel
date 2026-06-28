@@ -119,7 +119,7 @@ function Icon({ kind, color }: { kind: Pillar["icon"]; color: string }) {
 }
 
 export default function Skills() {
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(-1); // all collapsed by default
 
   const go = (href: string) => {
     const lenis = (window as unknown as { lenis?: Lenis }).lenis;
@@ -159,8 +159,8 @@ export default function Skills() {
           </Reveal>
           <Reveal delay={0.05}>
             <h2 className="font-display text-4xl font-bold leading-tight md:text-6xl">
-              Drei Disziplinen,{" "}
-              <span className="font-serif italic text-gold">eine Handschrift</span>.
+              Ein Kopf, das{" "}
+              <span className="font-serif italic text-gold">ganze Spektrum</span>.
             </h2>
           </Reveal>
         </div>
@@ -180,7 +180,7 @@ export default function Skills() {
                 >
                   {/* header row */}
                   <button
-                    onClick={() => setActive(i)}
+                    onClick={() => setActive(open ? -1 : i)}
                     aria-expanded={open}
                     className="flex w-full items-center gap-4 px-6 py-5 text-left transition-colors duration-300 md:px-8"
                   >
