@@ -12,7 +12,7 @@ const emit = (n: string) => {
 
 export default function Intro() {
   const [run, setRun] = useState(0);
-  const [step, setStep] = useState(0); // 0 load · 1/2 terminal · 3 shimmer · 4 welcome · 5 reveal
+  const [step, setStep] = useState(0); // 0 load · 1-3 terminal · 4 shimmer · 5 welcome · 6 reveal
   const [hidden, setHidden] = useState(false);
 
   // lock scroll while visible
@@ -47,19 +47,22 @@ export default function Intro() {
       setStep(1);
       emit("ux-tick");
     });
-    at(1600, () => {
+    at(1500, () => {
       setStep(2);
       emit("ux-tick");
     });
-    at(2700, () => {
+    at(2400, () => {
       setStep(3);
-      emit("ux-woosh");
+      emit("ux-tick");
     });
     at(3300, () => {
       setStep(4);
+      emit("ux-woosh");
+    });
+    at(3900, () => {
+      setStep(5);
       emit("ux-burst");
       // intro burst: slower and scattered across the whole screen
-      // (distances reach the far corners from the centre)
       const reach = Math.hypot(window.innerWidth, window.innerHeight) / 2;
       spawnBurst(window.innerWidth / 2, window.innerHeight / 2, 46, {
         minDist: reach * 0.25,
@@ -67,22 +70,22 @@ export default function Intro() {
         duration: 2200,
       });
     });
-    at(6000, () => setStep(5)); // hold WELCOME longer before the slow dissolve
-    at(8200, () => setHidden(true));
+    at(6600, () => setStep(6)); // hold WELCOME longer before the slow dissolve
+    at(8800, () => setHidden(true));
     return () => timers.forEach(clearTimeout);
   }, [run]);
 
   if (hidden) return null;
 
-  const revealing = step >= 5;
-  const welcome = step >= 4;
-  const shimmer = step >= 3;
+  const revealing = step >= 6;
+  const welcome = step >= 5;
+  const shimmer = step >= 4;
 
   // logo-click replay shows reboot copy + "Hello Again"
   const isReplay = run > 0;
   const term = isReplay
-    ? ["rebooting System", "restoring session"]
-    : ["..booting System", "loading stack"];
+    ? ["rebooting System", "restoring session", "welcome back"]
+    : ["..booting System", "loading stack", "initializing core"];
   const finalWord = isReplay ? "Hello Again" : "WELCOME";
 
   return (
@@ -175,7 +178,7 @@ export default function Intro() {
               </motion.div>
 
               {/* terminal lines */}
-              <div className="mt-8 h-12 w-[260px] font-mono text-[11px] leading-5 tracking-wide text-gold/80 md:w-[320px] md:text-xs">
+              <div className="mt-8 h-[68px] w-[260px] font-mono text-[11px] leading-5 tracking-wide text-gold/80 md:w-[320px] md:text-xs">
                 {term.map((line, i) => (
                   <motion.div
                     key={line}

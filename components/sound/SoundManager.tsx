@@ -225,6 +225,46 @@ export default function SoundManager() {
     voice(196.0, 2.6, "triangle", 0.07, 0.05);
   };
 
+  /* watery "swimming pool" ambience for the loading screen */
+  const playPool = () => {
+    const e = eng.current;
+    if (!e) return;
+    const t = e.ctx.currentTime;
+    // water wash — filtered noise with a slow shimmering lowpass
+    const src = e.ctx.createBufferSource();
+    src.buffer = e.noise;
+    src.loop = true;
+    const lp = e.ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 600;
+    lp.Q.value = 5;
+    const lfo = e.ctx.createOscillator();
+    lfo.frequency.value = 0.35;
+    const lfoGain = e.ctx.createGain();
+    lfoGain.gain.value = 380;
+    lfo.connect(lfoGain);
+    lfoGain.connect(lp.frequency);
+    const g = e.ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.13, t + 1.6);
+    g.gain.linearRampToValueAtTime(0.09, t + 4);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 6.5);
+    src.connect(lp);
+    lp.connect(g);
+    g.connect(e.master);
+    g.connect(e.reverb);
+    lfo.start(t);
+    src.start(t);
+    src.stop(t + 7);
+    lfo.stop(t + 7);
+    // muffled underwater tone + soft drips
+    voice(174.61, 4.5, "sine", 0.05, 0.1);
+    voice(261.63, 4, "sine", 0.03, 0.4);
+    [0.7, 1.6, 2.8, 4.1].forEach((d, i) =>
+      voice(880 + i * 130, 0.16, "sine", 0.03, d)
+    );
+  };
+
   const startPad = () => {
     const e = ensure();
     if (e.pad) return;
@@ -290,7 +330,9 @@ export default function SoundManager() {
     e.master.gain.cancelScheduledValues(e.ctx.currentTime);
     e.master.gain.linearRampToValueAtTime(0.9, e.ctx.currentTime + 1.5);
     startPad();
-    playEnter();
+    // during the loading screen → watery pool ambience; afterwards → the swell
+    if (performance.now() < 8000) playPool();
+    else playEnter();
     setEnabled(true);
     return true;
   };
