@@ -105,9 +105,9 @@ export default function Hero() {
           transition={{ delay: 0.95, duration: 1, ease }}
           className="mt-auto max-w-xl text-balance text-lg text-muted md:mt-12 md:text-xl"
         >
-          Ich entwerfe und baue komplette digitale Erlebnisse — von der{" "}
-          <span className="text-bone">cinematischen Oberfläche</span> bis zur{" "}
-          <span className="text-bone">On-Chain-Architektur</span>.
+          Komplexe Systeme, <span className="text-bone">klar gedacht und sauber
+          gebaut</span> — Design, Code und Infrastruktur{" "}
+          <span className="text-bone">aus einer Hand</span>.
         </motion.p>
       </div>
     </section>
