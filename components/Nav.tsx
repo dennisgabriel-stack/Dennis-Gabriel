@@ -17,34 +17,39 @@ type Contact = {
   label: string;
   sub: string;
   href: string;
+  accent: string;
   external?: boolean;
 };
 
 const CONTACTS: Contact[] = [
   {
     key: "task",
-    label: "Anfrage für bestimmte Aufgaben",
-    sub: "Projekt & Aufgaben",
-    href: "mailto:vimode@gmx.de?subject=Anfrage%20%E2%80%93%20Projekt%20%2F%20Aufgabe",
+    label: "Projektanfrage",
+    sub: "Anfrage für bestimmte Aufgaben",
+    href: "mailto:vimode@gmx.de?subject=Projektanfrage%20%E2%80%93%20Aufgabe%20%2F%20Scope",
+    accent: "#e6c88a",
   },
   {
     key: "mail",
-    label: "Email Anfrage",
+    label: "E-Mail Anfrage",
     sub: "vimode@gmx.de",
     href: "mailto:vimode@gmx.de",
+    accent: "#c9a86a",
   },
   {
     key: "whatsapp",
     label: "WhatsApp Talk",
-    sub: "0170 7332425",
+    sub: "Direkt schreiben · 0170 7332425",
     href: "https://wa.me/491707332425",
+    accent: "#bfa779",
     external: true,
   },
   {
     key: "phone",
-    label: "Call me for questions",
-    sub: "0170 7332425",
+    label: "Call me",
+    sub: "Fragen klären · 0170 7332425",
     href: "tel:+491707332425",
+    accent: "#d8b87a",
   },
 ];
 
@@ -163,31 +168,70 @@ export default function Nav() {
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            className="fixed inset-0 z-[80] flex items-center justify-center px-6"
+            className="fixed inset-0 z-[80] flex items-center justify-center px-5"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div
-              className="absolute inset-0 bg-ink/85 backdrop-blur-md"
+            {/* backdrop — matches the site (dark + gold glow + blueprint grid) */}
+            <button
+              aria-label="Schließen"
               onClick={() => setMenuOpen(false)}
-            />
-            <div className="relative w-full max-w-lg">
-              <div className="mb-6 flex items-center justify-between">
-                <p className="text-xs uppercase tracking-[0.4em] text-gold">
-                  Kontakt
-                </p>
+              className="absolute inset-0 cursor-default bg-ink/85 backdrop-blur-md"
+            >
+              <span className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(201,168,106,0.12),transparent_60%)]" />
+              <span
+                className="absolute inset-0 opacity-[0.05]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(rgba(201,168,106,0.6) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,106,0.6) 1px,transparent 1px)",
+                  backgroundSize: "48px 48px",
+                }}
+              />
+            </button>
+
+            {/* panel */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-lg rounded-3xl border border-gold/15 bg-ink-card/40 p-6 backdrop-blur-xl md:p-8"
+              style={{ boxShadow: "0 0 80px rgba(201,168,106,0.10)" }}
+            >
+              {/* HUD corner brackets */}
+              {[
+                "left-3 top-3 border-l border-t",
+                "right-3 top-3 border-r border-t",
+                "left-3 bottom-3 border-l border-b",
+                "right-3 bottom-3 border-r border-b",
+              ].map((cls) => (
+                <span
+                  key={cls}
+                  className={`pointer-events-none absolute h-5 w-5 border-gold/40 ${cls}`}
+                />
+              ))}
+
+              <div className="mb-6 flex items-start justify-between">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.4em] text-gold">
+                    Kontakt
+                  </p>
+                  <h3 className="mt-2 font-display text-2xl font-bold text-bone">
+                    Wie starten wir?
+                  </h3>
+                </div>
                 <button
                   onClick={() => setMenuOpen(false)}
                   aria-label="Schließen"
-                  className="text-xl text-muted transition-colors hover:text-bone"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-bone/15 text-muted transition-colors hover:border-gold/50 hover:text-bone"
                 >
                   ✕
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3.5 md:gap-4">
                 {CONTACTS.map((c, i) => (
                   <motion.a
                     key={c.key}
@@ -196,30 +240,73 @@ export default function Nav() {
                       ? { target: "_blank", rel: "noopener noreferrer" }
                       : {})}
                     onClick={() => setMenuOpen(false)}
-                    initial={{ opacity: 0, scale: 0.85, y: 14 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    initial={{ opacity: 0, scale: 0.8, y: 16, rotate: -2 }}
+                    animate={{ opacity: 1, scale: 1, y: 0, rotate: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{
-                      delay: i * 0.08,
-                      duration: 0.4,
+                      delay: 0.1 + i * 0.09,
+                      duration: 0.45,
                       ease: [0.16, 1, 0.3, 1],
                     }}
-                    className="group relative flex aspect-square flex-col justify-between overflow-hidden rounded-2xl border border-gold/25 bg-ink-card/70 p-5 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-gold hover:shadow-[0_0_40px_rgba(201,168,106,0.18)]"
+                    className="group relative flex aspect-square flex-col justify-between overflow-hidden rounded-2xl border p-4 transition-all duration-300 hover:-translate-y-1 md:p-5"
+                    style={{
+                      borderColor: `${c.accent}26`,
+                      background: `linear-gradient(155deg, ${c.accent}12, rgba(18,18,22,0.6))`,
+                    }}
                   >
-                    <span className="absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 bg-gradient-to-r from-transparent via-gold to-transparent transition-transform duration-500 group-hover:scale-x-100" />
-                    <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-gold/30 bg-gold/10 text-gold">
-                      <ContactIcon kind={c.key} />
-                    </span>
-                    <div>
-                      <div className="font-display text-base font-semibold leading-snug text-bone">
+                    {/* hover top beam + glow */}
+                    <span
+                      className="absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 transition-transform duration-500 group-hover:scale-x-100"
+                      style={{
+                        background: `linear-gradient(90deg, transparent, ${c.accent}, transparent)`,
+                      }}
+                    />
+                    <span
+                      className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                      style={{ boxShadow: `inset 0 0 50px ${c.accent}14, 0 0 36px ${c.accent}1f` }}
+                    />
+
+                    <div className="relative flex items-start justify-between">
+                      <span
+                        className="flex h-11 w-11 items-center justify-center rounded-xl border transition-colors duration-300"
+                        style={{
+                          borderColor: `${c.accent}33`,
+                          background: `${c.accent}12`,
+                          color: c.accent,
+                        }}
+                      >
+                        <ContactIcon kind={c.key} />
+                      </span>
+                      <span className="font-mono text-[10px] tracking-[0.2em] text-muted">
+                        0{i + 1}
+                      </span>
+                    </div>
+
+                    <div className="relative">
+                      <div className="font-display text-[17px] font-semibold leading-tight text-bone">
                         {c.label}
                       </div>
-                      <div className="mt-1 text-xs text-muted">{c.sub}</div>
+                      <div className="mt-1.5 text-[11px] leading-snug text-muted">
+                        {c.sub}
+                      </div>
+                      <span
+                        className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-medium opacity-0 transition-all duration-300 group-hover:opacity-100"
+                        style={{ color: c.accent }}
+                      >
+                        Auswählen
+                        <span className="transition-transform duration-300 group-hover:translate-x-1">
+                          →
+                        </span>
+                      </span>
                     </div>
                   </motion.a>
                 ))}
               </div>
-            </div>
+
+              <p className="mt-6 text-center text-[10px] uppercase tracking-[0.3em] text-muted">
+                Antwort meist innerhalb von 24 h
+              </p>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
