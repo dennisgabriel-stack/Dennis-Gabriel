@@ -63,7 +63,7 @@ export default function Hero() {
             transition={{ delay: 0.3, duration: 0.9, ease }}
             className="mb-6 text-xs uppercase tracking-[0.4em] text-gold md:mb-10"
           >
-            Engineering · Design · Code · Architektur
+            Engineering · Design · Code · Architecture
           </motion.p>
 
           <motion.p
