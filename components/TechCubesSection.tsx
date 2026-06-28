@@ -169,8 +169,7 @@ export default function TechCubesSection() {
           />
         </div>
         <TechCubes onFocus={setTech} buildRef={buildRef} />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-ink to-transparent" />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-ink to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-ink to-transparent" />
 
         {/* tech detail card on cube tap */}
         <AnimatePresence>

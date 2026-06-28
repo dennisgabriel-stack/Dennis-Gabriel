@@ -664,7 +664,7 @@ export default function TechCubes({
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       onPointerMissed={() => setFocused(null)}
     >
-      <fog attach="fog" args={[0x0a0a0b, 16, 42]} />
+      <fog attach="fog" args={[0x0a0a0b, 22, 64]} />
       <Ambience />
       <Blocks focused={focused} setFocused={setFocused} buildRef={buildRef} />
     </Canvas>
