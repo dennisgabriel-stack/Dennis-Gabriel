@@ -58,7 +58,14 @@ export default function Intro() {
     at(3300, () => {
       setStep(4);
       emit("ux-burst");
-      spawnBurst(window.innerWidth / 2, window.innerHeight / 2, 18);
+      // intro burst: slower and scattered across the whole screen
+      // (distances reach the far corners from the centre)
+      const reach = Math.hypot(window.innerWidth, window.innerHeight) / 2;
+      spawnBurst(window.innerWidth / 2, window.innerHeight / 2, 46, {
+        minDist: reach * 0.25,
+        maxDist: reach * 1.05,
+        duration: 2200,
+      });
     });
     at(6000, () => setStep(5)); // hold WELCOME longer before the slow dissolve
     at(8200, () => setHidden(true));

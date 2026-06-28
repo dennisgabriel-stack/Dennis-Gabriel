@@ -1,8 +1,25 @@
 // shared "tap burst" — gold/bone shard particles flying out from a point
 const COLORS = ["#e6c88a", "#c9a86a", "#f5f4f0"];
 
-export function spawnBurst(x: number, y: number, count = 13) {
+type BurstOpts = {
+  /** smallest travel distance in px */
+  minDist?: number;
+  /** largest travel distance in px */
+  maxDist?: number;
+  /** base animation duration in ms (a small random jitter is added) */
+  duration?: number;
+};
+
+export function spawnBurst(
+  x: number,
+  y: number,
+  count = 13,
+  opts: BurstOpts = {}
+) {
   if (typeof document === "undefined") return;
+  const minDist = opts.minDist ?? 28;
+  const maxDist = opts.maxDist ?? 106;
+  const baseDuration = opts.duration ?? 1050;
   for (let i = 0; i < count; i++) {
     const el = document.createElement("div");
     const size = 8 + Math.random() * 12;
@@ -11,7 +28,7 @@ export function spawnBurst(x: number, y: number, count = 13) {
     document.body.appendChild(el);
 
     const ang = Math.random() * Math.PI * 2;
-    const dist = 28 + Math.random() * 78;
+    const dist = minDist + Math.random() * (maxDist - minDist);
     const dx = Math.cos(ang) * dist;
     const dy = Math.sin(ang) * dist;
     const rot = (Math.random() - 0.5) * 420;
@@ -38,7 +55,7 @@ export function spawnBurst(x: number, y: number, count = 13) {
           opacity: 0,
         },
       ],
-      { duration: 1050 + Math.random() * 300, easing: "cubic-bezier(0.16,1,0.3,1)" }
+      { duration: baseDuration + Math.random() * 300, easing: "cubic-bezier(0.16,1,0.3,1)" }
     );
     anim.onfinish = () => el.remove();
   }
