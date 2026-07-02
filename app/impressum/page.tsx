@@ -15,9 +15,9 @@ export default function Impressum() {
         <br />
         ARCHANGEL//DEV
         <br />
-        [Straße &amp; Hausnummer]
+        Talstraße 14
         <br />
-        [PLZ &amp; Ort]
+        67433 Neustadt an der Weinstraße
         <br />
         Deutschland
       </p>
@@ -29,17 +29,18 @@ export default function Impressum() {
         E-Mail: <a href="mailto:vimode@gmx.de">vimode@gmx.de</a>
       </p>
 
-      <h2>Umsatzsteuer</h2>
+      <h2>Hinweis zur Website</h2>
       <p>
-        Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:
-        [USt-IdNr. — falls vorhanden]. Als Kleinunternehmer im Sinne von § 19
-        UStG wird keine Umsatzsteuer ausgewiesen. [Diesen Absatz entsprechend
-        anpassen.]
+        Diese Website dient ausschließlich der persönlichen Darstellung bzw. als
+        Portfolio. Über diese Website werden keine Waren, digitalen Inhalte oder
+        Dienstleistungen verkauft und keine kommerziellen Transaktionen
+        abgewickelt. Es handelt sich um ein nicht-kommerzielles, privates
+        Online-Angebot ohne Entgeltcharakter.
       </p>
 
       <h2>Redaktionell verantwortlich (§ 18 Abs. 2 MStV)</h2>
       <p>
-        Dennis Gabriel, [Straße &amp; Hausnummer], [PLZ &amp; Ort]
+        Dennis Gabriel, Talstraße 14, 67433 Neustadt an der Weinstraße
       </p>
 
       <h2>Verbraucherstreitbeilegung</h2>

@@ -20,7 +20,7 @@ export default function Datenschutz() {
       <p>
         Dennis Gabriel
         <br />
-        [Straße &amp; Hausnummer], [PLZ &amp; Ort], Deutschland
+        Talstraße 14, 67433 Neustadt an der Weinstraße, Deutschland
         <br />
         E-Mail: <a href="mailto:vimode@gmx.de">vimode@gmx.de</a>
         <br />
@@ -28,6 +28,13 @@ export default function Datenschutz() {
       </p>
 
       <h2>2. Allgemeines zur Datenverarbeitung</h2>
+      <p>
+        Diese Website dient ausschließlich der persönlichen Darstellung bzw. als
+        Portfolio; es werden keine Waren, Inhalte oder Dienstleistungen verkauft
+        und keine kommerziellen Transaktionen abgewickelt. Entsprechend werden
+        nur die technisch notwendigen sowie die von Ihnen aktiv übermittelten
+        Daten verarbeitet.
+      </p>
       <p>
         Der Schutz Ihrer personenbezogenen Daten ist uns wichtig. Wir
         verarbeiten personenbezogene Daten ausschließlich im Rahmen der
