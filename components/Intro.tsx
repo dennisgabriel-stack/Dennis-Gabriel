@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import type Lenis from "lenis";
 import { spawnBurst } from "./burst";
@@ -14,16 +15,17 @@ export default function Intro() {
   const [run, setRun] = useState(0);
   const [step, setStep] = useState(0); // 0 load · 1-3 terminal · 4 shimmer · 5 welcome · 6 reveal
   const [hidden, setHidden] = useState(false);
+  const isHome = usePathname() === "/";
 
   // lock scroll while visible
   useEffect(() => {
-    if (hidden) return;
+    if (hidden || !isHome) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev || "";
     };
-  }, [hidden, run]);
+  }, [hidden, run, isHome]);
 
   // replay from header logo
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function Intro() {
 
   // timeline
   useEffect(() => {
+    if (!isHome) return;
     setStep(0);
     const timers: ReturnType<typeof setTimeout>[] = [];
     const at = (ms: number, fn: () => void) => timers.push(setTimeout(fn, ms));
@@ -73,9 +76,9 @@ export default function Intro() {
     at(6600, () => setStep(6)); // hold WELCOME longer before the slow dissolve
     at(8800, () => setHidden(true));
     return () => timers.forEach(clearTimeout);
-  }, [run]);
+  }, [run, isHome]);
 
-  if (hidden) return null;
+  if (hidden || !isHome) return null;
 
   const revealing = step >= 6;
   const welcome = step >= 5;
